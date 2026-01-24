@@ -164,14 +164,29 @@ export default function AnunciarVagaPage() {
                     >
                         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] font-black uppercase tracking-widest mb-6 mx-auto md:mx-0">
                             <Sparkles className="h-3 w-3 text-secondary" />
-                            Quero divulgar uma vaga
+                            Para Empresas
                         </div>
                         <h1 className="font-heading text-4xl md:text-6xl font-black text-white mb-4 leading-[1.1] tracking-tight">
-                            Fortaleça seu time<br />com quem entende do campo
+                            Divulgue sua vaga agora <span className="text-secondary italic">gratuitamente</span>
                         </h1>
-                        <p className="text-primary-foreground/70 text-lg md:text-xl max-w-xl font-medium">
-                            Conecte-se com os melhores talentos do agronegócio brasileiro de forma simples, rápida e eficiente.
+                        <p className="text-primary-foreground/90 text-lg md:text-xl max-w-2xl font-medium mb-8 leading-relaxed">
+                            Se sua empresa é do agronegócio, a Perfil Agro oferece divulgação gratuita em nossos canais especializados. Uma forma rápida e eficiente de alcançar profissionais qualificados.
                         </p>
+
+                        {/* Como funciona steps - simplified for header */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-left max-w-3xl">
+                            {[
+                                "Você envia as informações da vaga",
+                                "Perfil Agro realiza divulgação estratégica",
+                                "Candidatos se inscrevem",
+                                "Você recebe mais alcance e visibilidade"
+                            ].map((step, i) => (
+                                <div key={i} className="bg-white/10 backdrop-blur-sm border border-white/10 p-4 rounded-xl">
+                                    <div className="h-6 w-6 rounded-full bg-secondary text-primary font-bold flex items-center justify-center text-xs mb-2">{i + 1}</div>
+                                    <p className="text-sm text-white/90 leading-tight">{step}</p>
+                                </div>
+                            ))}
+                        </div>
                     </motion.div>
                 </div>
             </div>
@@ -230,8 +245,9 @@ export default function AnunciarVagaPage() {
                                                         <FormItem className="space-y-3">
                                                             <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Localização</FormLabel>
                                                             <FormControl>
-                                                                <Input placeholder="Cidade - UF" className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6" {...field} />
+                                                                <Input placeholder="Ex: Itapeva/SP, Guarapuava/PR" className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6" {...field} />
                                                             </FormControl>
+                                                            <FormDescription className="text-[10px] text-gray-400 font-medium ml-1 italic">Dica: Você pode listar várias cidades se necessário.</FormDescription>
                                                             <FormMessage />
                                                         </FormItem>
                                                     )}
@@ -249,7 +265,7 @@ export default function AnunciarVagaPage() {
                                                                     </SelectTrigger>
                                                                 </FormControl>
                                                                 <SelectContent className="rounded-2xl border-none shadow-2xl p-2">
-                                                                    <SelectItem value="CLT" className="rounded-xl py-3 px-4 focus:bg-primary/5">CLT</SelectItem>
+                                                                    <SelectItem value="CLT" className="rounded-xl py-3 px-4 focus:bg-primary/5">CLT + Benefícios</SelectItem>
                                                                     <SelectItem value="PJ" className="rounded-xl py-3 px-4 focus:bg-primary/5">PJ</SelectItem>
                                                                     <SelectItem value="Estágio" className="rounded-xl py-3 px-4 focus:bg-primary/5">Estágio</SelectItem>
                                                                     <SelectItem value="Temporário" className="rounded-xl py-3 px-4 focus:bg-primary/5">Temporário</SelectItem>
@@ -265,11 +281,16 @@ export default function AnunciarVagaPage() {
 
                                     {/* Section 2: Content */}
                                     <div className="space-y-8">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 rounded-xl bg-gray-50 text-gray-400">
-                                                <FileText className="h-5 w-5" />
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 rounded-xl bg-gray-50 text-gray-400">
+                                                    <FileText className="h-5 w-5" />
+                                                </div>
+                                                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">Detalhamento</h3>
                                             </div>
-                                            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">Detalhamento</h3>
+                                            <Badge variant="outline" className="text-[10px] font-bold text-primary border-primary/20 bg-primary/5 px-3 py-1 rounded-lg">
+                                                Use Markdown para formatar
+                                            </Badge>
                                         </div>
 
                                         <FormField
@@ -280,11 +301,14 @@ export default function AnunciarVagaPage() {
                                                     <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Descrição e Requisitos</FormLabel>
                                                     <FormControl>
                                                         <Textarea
-                                                            placeholder="Descreva as responsabilidades, benefícios e qualificações..."
-                                                            className="min-h-[250px] bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-3xl font-medium p-8 leading-relaxed resize-none"
+                                                            placeholder={`### Formação\n- Ex: Técnico Agrícola ou Engenheiro Agrônomo\n\n### Perfil\n- Conhecimento da cultura de Soja e Milho\n- Experiência com GPS\n\n### Requisitos\n- Disponibilidade para viagens\n- CNH B`}
+                                                            className="min-h-[350px] bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-3xl font-medium p-8 leading-relaxed resize-none font-mono text-sm"
                                                             {...field}
                                                         />
                                                     </FormControl>
+                                                    <FormDescription className="text-xs text-gray-400 font-medium ml-1">
+                                                        Dica: Use **### Título** para criar seções e **- Item** para listas, como nas artes clássicas.
+                                                    </FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}

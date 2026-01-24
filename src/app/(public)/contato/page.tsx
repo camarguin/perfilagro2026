@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/form"
 import { Mail, Phone, MapPin, MessageSquare, Send, CheckCircle2, Loader2, Headset } from "lucide-react"
 import { motion } from "framer-motion"
+import { PageHeader } from "@/components/ui/page-header"
 
 const formSchema = z.object({
     name: z.string().min(3, 'Nome muito curto'),
@@ -87,30 +88,14 @@ export default function ContatoPage() {
 
     return (
         <div className="flex flex-col min-h-screen bg-gray-50/50">
-            {/* Premium Header Banner */}
-            <div className="bg-primary pt-32 pb-40 px-4 relative overflow-hidden">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay scale-110" />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent" />
-
-                <div className="container mx-auto relative z-10 text-center md:text-left">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                    >
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] font-black uppercase tracking-widest mb-6 mx-auto md:mx-0">
-                            <Headset className="h-3 w-3 text-secondary" />
-                            Atendimento
-                        </div>
-                        <h1 className="font-heading text-4xl md:text-6xl font-black text-white mb-4 leading-[1.1] tracking-tight">
-                            Estamos aqui para<br />ajudar você
-                        </h1>
-                        <p className="text-primary-foreground/70 text-lg md:text-xl max-w-xl font-medium">
-                            Dúvidas, sugestões ou suporte? Nossa equipe está pronta para te atender.
-                        </p>
-                    </motion.div>
-                </div>
-            </div>
+            {/* Premium Header Banner using PageHeader */}
+            <PageHeader
+                title="Fale com a Perfil Agro"
+                description="Entre em contato e descubra como podemos apoiar seu crescimento com soluções completas em recrutamento, seleção e gestão de pessoas para o agro."
+                badge="Contato"
+                imageSrc="https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=2070&auto=format&fit=crop"
+                className="pb-40 md:pb-48"
+            />
 
             {/* Overlapping Content */}
             <div className="container mx-auto px-4 -mt-24 pb-24 relative z-20">

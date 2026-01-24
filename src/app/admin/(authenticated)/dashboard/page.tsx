@@ -1,7 +1,60 @@
+'use client'
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Briefcase, FileText, CheckCircle } from "lucide-react";
+import { Users, Briefcase, FileText, CheckCircle, Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useEffect, useState } from "react";
 
 export default function DashboardPage() {
+    const [isLoading, setIsLoading] = useState(true);
+    const [stats, setStats] = useState<any[]>([]);
+    const [recentJobs, setRecentJobs] = useState<any[]>([]);
+    const [recentCandidates, setRecentCandidates] = useState<any[]>([]);
+
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const [
+                    { count: activeJobsCount },
+                    { count: totalCandidatesCount },
+                    { count: totalResumesCount },
+                    { count: recentApplicationsCount },
+                    { data: jobsData },
+                    { data: candidatesData }
+                ] = await Promise.all([
+                    supabase.from('jobs').select('*', { count: 'exact' }).eq('status', 'active').limit(0),
+                    supabase.from('candidates').select('*', { count: 'exact' }).eq('is_archived', false).limit(0),
+                    supabase.from('candidates').select('*', { count: 'exact' }).eq('is_archived', false).limit(0),
+                    supabase.from('candidates').select('*', { count: 'exact' }).eq('is_archived', false).gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()).limit(0),
+                    supabase.from('jobs').select('*').order('created_at', { ascending: false }).limit(5),
+                    supabase.from('candidates').select('*').eq('is_archived', false).order('created_at', { ascending: false }).limit(5)
+                ]);
+
+                setStats([
+                    { title: "Vagas Ativas", value: activeJobsCount || 0, growth: "Em tempo real", icon: Briefcase, color: "text-primary", bg: "bg-primary/10" },
+                    { title: "Candidatos", value: totalCandidatesCount || 0, growth: "Banco total", icon: Users, color: "text-secondary", bg: "bg-secondary/10" },
+                    { title: "Currículos", value: totalResumesCount || 0, growth: "Arquivos PDF", icon: FileText, color: "text-orange-600", bg: "bg-orange-50" },
+                    { title: "Aplicações", value: recentApplicationsCount || 0, growth: "Últimas 24h", icon: CheckCircle, color: "text-blue-600", bg: "bg-blue-50" },
+                ]);
+                setRecentJobs(jobsData || []);
+                setRecentCandidates(candidatesData || []);
+            } catch (error) {
+                console.error("Error fetching dashboard data:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchData();
+    }, []);
+
+    if (isLoading) {
+        return (
+            <div className="flex h-[60vh] items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-10">
             <div>
@@ -10,12 +63,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {[
-                    { title: "Vagas Ativas", value: "12", growth: "+2 novas", icon: Briefcase, color: "text-primary", bg: "bg-primary/10" },
-                    { title: "Candidatos", value: "2,350", growth: "+180 mês", icon: Users, color: "text-secondary", bg: "bg-secondary/10" },
-                    { title: "Currículos", value: "5,200", growth: "Banco total", icon: FileText, color: "text-orange-600", bg: "bg-orange-50" },
-                    { title: "Aplicações", value: "45", growth: "+12% hoje", icon: CheckCircle, color: "text-blue-600", bg: "bg-blue-50" },
-                ].map((stat, i) => (
+                {stats.map((stat, i) => (
                     <Card key={i} className="border-none shadow-xl rounded-[2rem] ring-1 ring-black/5 bg-white group hover:scale-105 transition-transform duration-500">
                         <CardHeader className="flex flex-row items-center justify-between pb-4">
                             <CardTitle className="text-xs font-black uppercase tracking-widest text-gray-400">
@@ -45,17 +93,17 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent className="p-8">
                         <div className="space-y-4">
-                            {[
-                                { title: "Gerente de Fazenda", loc: "Sorriso/MT", date: "Há 2 horas" },
-                                { title: "Agrônomo de Vendas", loc: "Primavera/MT", date: "Há 5 horas" },
-                                { title: "Operador de Máquinas", loc: "Rio Verde/GO", date: "Ontem" },
-                            ].map((job, i) => (
-                                <div key={i} className="flex items-center justify-between p-4 rounded-2xl hover:bg-muted/30 transition-colors group">
+                            {!recentJobs || recentJobs.length === 0 ? (
+                                <p className="text-muted-foreground text-sm py-4">Nenhuma vaga cadastrada.</p>
+                            ) : recentJobs.map((job) => (
+                                <div key={job.id} className="flex items-center justify-between p-4 rounded-2xl hover:bg-muted/30 transition-colors group">
                                     <div>
                                         <div className="font-bold text-gray-900 group-hover:text-primary transition-colors">{job.title}</div>
-                                        <div className="text-xs text-muted-foreground font-medium">{job.loc}</div>
+                                        <div className="text-xs text-muted-foreground font-medium">{job.location}</div>
                                     </div>
-                                    <div className="text-[10px] font-black uppercase text-gray-300">{job.date}</div>
+                                    <div className="text-[10px] font-black uppercase text-gray-300">
+                                        {new Date(job.created_at).toLocaleDateString('pt-BR')}
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -66,20 +114,21 @@ export default function DashboardPage() {
                     <CardHeader className="bg-gray-50/50 p-8 border-b border-gray-100">
                         <CardTitle className="text-xl font-bold flex items-center gap-3">
                             <div className="h-6 w-1 bg-secondary rounded-full" />
-                            Logs Recentes
+                            Aplicações Recentes
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-8">
                         <div className="space-y-6">
-                            {[
-                                "Novo candidato cadastrado há 5 min.",
-                                "Vaga #123 atualizada por Admin.",
-                                "Exportação de dados concluída.",
-                                "Backup do banco realizado."
-                            ].map((log, i) => (
-                                <div key={i} className="flex gap-4 items-start">
-                                    <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-secondary shrink-0" />
-                                    <p className="text-sm font-medium text-gray-500 leading-tight">{log}</p>
+                            {!recentCandidates || recentCandidates.length === 0 ? (
+                                <p className="text-muted-foreground text-sm py-4">Nenhuma aplicação recente.</p>
+                            ) : recentCandidates.map((candidate) => (
+                                <div key={candidate.id} className="flex gap-4 items-start border-l-2 border-secondary/20 pl-4 py-1">
+                                    <div>
+                                        <p className="text-sm font-bold text-gray-900 leading-tight">{candidate.name}</p>
+                                        <p className="text-[10px] text-gray-400 font-medium uppercase mt-1">
+                                            {new Date(candidate.created_at).toLocaleDateString('pt-BR')}
+                                        </p>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -87,6 +136,5 @@ export default function DashboardPage() {
                 </Card>
             </div>
         </div>
-
     );
 }

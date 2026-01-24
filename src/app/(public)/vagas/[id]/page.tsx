@@ -3,7 +3,9 @@ import { JobApplicationForm } from '@/components/job-application-form'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
-import { MapPin, Briefcase, Calendar } from 'lucide-react'
+import { MapPin, Briefcase, Calendar, FileText } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { Metadata } from 'next'
 
 // Next.js 15 Params are async
@@ -37,66 +39,73 @@ export default async function JobDetailsPage(props: { params: Params }) {
         notFound()
     }
 
+    const isNew = (new Date().getTime() - new Date(job.created_at).getTime()) < 7 * 24 * 60 * 60 * 1000;
+
     return (
-        <div className="min-h-screen bg-muted/20 py-16 px-4">
+        <div className="min-h-screen bg-muted/20 py-16 px-4 pt-32">
             <div className="max-w-5xl mx-auto space-y-10">
 
                 {/* Header Section */}
-                <div className="bg-white rounded-3xl shadow-xl overflow-hidden ring-1 ring-black/5">
-                    <div className="h-64 bg-primary relative">
-                        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1500382017468-9049fee74a62?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-overlay" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-primary to-transparent" />
+                <div className="bg-white rounded-[3rem] shadow-2xl overflow-hidden ring-1 ring-black/5">
+                    {/* Dark Background Area - Now flexible height */}
+                    <div className="bg-primary relative pt-20 pb-32 px-6 md:px-12 lg:px-16">
+                        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1500382017468-9049fed74a62?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-overlay" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/60 to-transparent" />
+
+                        <div className="relative z-10 space-y-6 max-w-4xl">
+                            <div className="flex flex-wrap gap-2">
+                                {isNew && (
+                                    <Badge className="bg-secondary text-primary font-black uppercase text-[10px] tracking-widest px-3 py-1 animate-pulse border-none shadow-lg shadow-secondary/20">
+                                        Recente
+                                    </Badge>
+                                )}
+                                <Badge className="bg-white/10 text-white backdrop-blur-md border border-white/20 font-bold text-[10px] uppercase tracking-widest px-3 py-1">
+                                    {job.type}
+                                </Badge>
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-[10px] font-black uppercase tracking-widest border border-green-500/30">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
+                                    Vaga Ativa
+                                </div>
+                            </div>
+
+                            <h1 className="text-4xl md:text-6xl font-black text-white leading-[1.1] tracking-tight drop-shadow-xl">{job.title}</h1>
+
+                            <div className="flex flex-wrap gap-x-8 gap-y-3 text-sm font-bold text-white/70">
+                                <div className="flex items-center gap-2">
+                                    <MapPin className="w-4 h-4 text-secondary drop-shadow" />
+                                    {job.location}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Briefcase className="w-4 h-4 text-secondary drop-shadow" />
+                                    {job.type}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-secondary drop-shadow" />
+                                    Publicado em {new Date(job.created_at).toLocaleDateString('pt-BR')}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="px-10 pb-10 -mt-20 relative z-10">
-                        <div className="flex flex-col md:flex-row gap-8 items-end">
+                    {/* Overlapping Content Area */}
+                    <div className="px-6 md:px-12 lg:px-16 pb-12 -mt-24 relative z-20">
+                        <div className="flex flex-col md:flex-row gap-8 items-end justify-between">
                             {/* Job Image or Logo */}
-                            <div className="w-40 h-40 rounded-3xl bg-white shadow-2xl border-4 border-white flex items-center justify-center overflow-hidden shrink-0">
+                            <div className="w-44 h-44 md:w-52 md:h-52 rounded-[2.5rem] bg-white shadow-2xl border-8 border-white flex items-center justify-center overflow-hidden shrink-0 group transition-transform hover:scale-[1.02]">
                                 {job.image_url ? (
                                     <Image
                                         src={job.image_url}
                                         alt={job.title}
-                                        width={160}
-                                        height={160}
-                                        className="w-full h-full object-cover"
+                                        width={240}
+                                        height={240}
+                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                     />
                                 ) : (
-                                    <Briefcase className="w-16 h-16 text-primary/40" />
+                                    <Briefcase className="w-20 h-20 text-primary/40" />
                                 )}
                             </div>
 
-                            <div className="flex-1 space-y-4 mb-2">
-                                <div>
-                                    <h1 className="text-4xl font-bold text-gray-900 leading-tight">{job.title}</h1>
-                                    <div className="flex flex-wrap gap-6 mt-4 text-base font-medium text-gray-500">
-                                        <div className="flex items-center gap-2">
-                                            <MapPin className="w-5 h-5 text-primary" />
-                                            {job.location}
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Briefcase className="w-5 h-5 text-primary" />
-                                            {job.type}
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Calendar className="w-5 h-5 text-primary" />
-                                            Publicado em {new Date(job.created_at).toLocaleDateString('pt-BR')}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-3">
-                                    <Badge className="bg-primary/10 text-primary border-none text-sm px-4 py-1">
-                                        {job.type}
-                                    </Badge>
-                                    {job.status === 'active' ? (
-                                        <Badge className="bg-green-500 text-white border-none text-sm px-4 py-1">Vaga Ativa</Badge>
-                                    ) : (
-                                        <Badge variant="destructive" className="text-sm px-4 py-1">Processo Encerrado</Badge>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="shrink-0 w-full md:w-auto">
+                            <div className="pb-4 w-full md:w-auto">
                                 <JobApplicationForm jobId={job.id} jobTitle={job.title} />
                             </div>
                         </div>
@@ -104,13 +113,23 @@ export default async function JobDetailsPage(props: { params: Params }) {
                 </div>
 
                 {/* Description Section */}
-                <div className="bg-white rounded-3xl shadow-xl p-10 ring-1 ring-black/5">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <div className="w-2 h-8 bg-primary rounded-full" />
-                        Descrição da Oportunidade
-                    </h2>
-                    <div className="prose prose-lg max-w-none text-gray-600 whitespace-pre-wrap leading-relaxed font-medium">
-                        {job.description}
+                <div className="bg-white rounded-[3rem] shadow-xl p-8 md:p-12 lg:p-16 ring-1 ring-black/5">
+                    <div className="flex items-center gap-4 mb-10">
+                        <div className="p-3 rounded-2xl bg-primary/5 text-primary">
+                            <FileText className="h-6 w-6" />
+                        </div>
+                        <h2 className="text-2xl font-black text-gray-900 tracking-tight">Descrição da Oportunidade</h2>
+                    </div>
+
+                    <div className="prose prose-slate max-w-none 
+                        prose-headings:font-black prose-headings:text-gray-900 prose-headings:tracking-tight 
+                        prose-h3:text-lg prose-h3:uppercase prose-h3:tracking-widest prose-h3:text-primary prose-h3:mt-8 prose-h3:mb-4
+                        prose-p:text-gray-600 prose-p:leading-relaxed prose-p:text-lg
+                        prose-li:text-gray-600 prose-li:text-lg prose-li:leading-relaxed
+                        prose-strong:text-gray-900 prose-strong:font-black">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {job.description}
+                        </ReactMarkdown>
                     </div>
                 </div>
 

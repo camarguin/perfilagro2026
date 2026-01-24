@@ -21,6 +21,19 @@ export default function AdminLayout({
             if (!session) {
                 router.push("/admin/login");
             } else {
+                // Verify if user is in user_roles
+                const { data: roleData, error: roleError } = await supabase
+                    .from('user_roles')
+                    .select('id')
+                    .eq('email', session.user.email)
+                    .single();
+
+                if (roleError || !roleData) {
+                    console.error("Access denied: User not in user_roles");
+                    await supabase.auth.signOut();
+                    router.push("/admin/login?error=unauthorized");
+                    return;
+                }
                 setIsLoading(false);
             }
         };

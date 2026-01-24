@@ -162,3 +162,15 @@
     @apply bg-background text-foreground;
   }
 }
+/* Custom cursor for interactive elements */
+@layer base {
+  button, 
+  [role="button"],
+  a,
+  input[type="submit"],
+  input[type="button"],
+  label[for],
+  select {
+    cursor: pointer !important;
+  }
+}

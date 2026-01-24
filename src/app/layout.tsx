@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   description: "Encontre as melhores oportunidades de emprego no agronegócio.",
 };
 
+import { Toaster } from "@/components/ui/sonner";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,6 +30,7 @@ export default function RootLayout({
         className={`${plusJakartaSans.variable} ${outfit.variable} font-sans antialiased`}
       >
         {children}
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );

@@ -7,26 +7,27 @@ import { Search, MapPin, Briefcase, Calendar, Filter } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
+import { PageHeader } from "@/components/ui/page-header";
+
+export const dynamic = 'force-dynamic'
+
 export default async function VagasPage() {
     const { data: jobs, error } = await supabase
         .from('jobs')
         .select('*')
         .eq('status', 'active')
+        .eq('is_approved', true)
         .order('created_at', { ascending: false });
 
     return (
         <div className="flex flex-col min-h-screen bg-muted/20">
             {/* Page Header */}
-            <div className="bg-primary pt-24 pb-16 px-4 shadow-md overflow-hidden relative">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1595246140625-573b715d11dc?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-5 mix-blend-overlay"></div>
-                <div className="container mx-auto relative z-10">
-                    <Badge className="mb-4 bg-white/20 text-white border-none px-4 py-1 backdrop-blur-sm">Oportunidades</Badge>
-                    <h1 className="font-heading text-4xl md:text-6xl font-bold text-white mb-4">Vagas Disponíveis</h1>
-                    <p className="text-primary-foreground/90 text-lg md:text-xl max-w-2xl leading-relaxed">
-                        Conecte-se com as empresas que estão moldando o futuro do agronegócio.
-                    </p>
-                </div>
-            </div>
+            <PageHeader
+                title="Vagas Disponíveis"
+                description="Conecte-se com as empresas que estão moldando o futuro do agronegócio."
+                badge="Oportunidades"
+                imageSrc="https://images.unsplash.com/photo-1595246140625-573b715d11dc?q=80&w=2070&auto=format&fit=crop"
+            />
 
             <div className="container mx-auto px-4 py-16 flex flex-col lg:flex-row gap-12">
 
@@ -109,41 +110,51 @@ export default async function VagasPage() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {jobs.map((job, index) => (
-                                <Card key={job.id} className="group hover:scale-[1.02] transition-all duration-500 border-none shadow-xl hover:shadow-2xl bg-white overflow-hidden ring-1 ring-black/5 rounded-[2.5rem] animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}>
-                                    <CardHeader className="p-8 pb-4">
-                                        <div className="flex justify-between items-start mb-6">
-                                            <Badge className="bg-primary/5 text-primary border-none font-bold px-4 py-1.5 rounded-full uppercase tracking-widest text-[10px]">
-                                                {job.type}
-                                            </Badge>
-                                            <span className="text-xs font-bold text-muted-foreground/40 uppercase tracking-widest flex items-center gap-2">
-                                                <Calendar className="h-3 w-3" />
-                                                {new Date(job.created_at).toLocaleDateString('pt-BR')}
-                                            </span>
-                                        </div>
-                                        <h3 className="font-heading font-black text-2xl text-foreground group-hover:text-primary transition-colors mb-4 leading-tight">
-                                            {job.title}
-                                        </h3>
-                                    </CardHeader>
-                                    <CardContent className="px-8 py-2 space-y-6">
-                                        <div className="flex items-center text-foreground font-bold text-sm bg-muted/30 w-fit px-4 py-2 rounded-xl">
-                                            <MapPin className="h-4 w-4 mr-3 text-primary" />
-                                            {job.location}
-                                        </div>
+                            {jobs.map((job, index) => {
+                                const isNew = (new Date().getTime() - new Date(job.created_at).getTime()) < 7 * 24 * 60 * 60 * 1000;
+                                return (
+                                    <Card key={job.id} className={`group hover:scale-[1.02] transition-all duration-500 border-none shadow-xl hover:shadow-2xl bg-white overflow-hidden ring-1 ring-black/5 rounded-[2.5rem] animate-in fade-in slide-in-from-bottom-4 ${isNew ? 'ring-2 ring-primary/10 shadow-primary/5' : ''}`} style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}>
+                                        <CardHeader className="p-8 pb-4">
+                                            <div className="flex justify-between items-start mb-6">
+                                                <div className="flex gap-2">
+                                                    {isNew && (
+                                                        <Badge className="bg-secondary text-primary border-none font-black px-3 py-1 rounded-full uppercase tracking-widest text-[10px] animate-pulse">
+                                                            Recente
+                                                        </Badge>
+                                                    )}
+                                                    <Badge className="bg-primary/5 text-primary border-none font-bold px-4 py-1.5 rounded-full uppercase tracking-widest text-[10px]">
+                                                        {job.type}
+                                                    </Badge>
+                                                </div>
+                                                <span className="text-xs font-bold text-muted-foreground/40 uppercase tracking-widest flex items-center gap-2">
+                                                    <Calendar className="h-3 w-3" />
+                                                    {new Date(job.created_at).toLocaleDateString('pt-BR')}
+                                                </span>
+                                            </div>
+                                            <h3 className="font-heading font-black text-2xl text-foreground group-hover:text-primary transition-colors mb-4 leading-tight">
+                                                {job.title}
+                                            </h3>
+                                        </CardHeader>
+                                        <CardContent className="px-8 py-2 space-y-6">
+                                            <div className="flex items-center text-foreground font-bold text-sm bg-muted/30 w-fit px-4 py-2 rounded-xl">
+                                                <MapPin className="h-4 w-4 mr-3 text-primary" />
+                                                {job.location}
+                                            </div>
 
-                                        <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed">
-                                            {job.description}
-                                        </p>
-                                    </CardContent>
-                                    <CardFooter className="p-8 pt-6">
-                                        <Link href={`/vagas/${job.id}`} className="w-full">
-                                            <Button variant="outline" className="w-full h-14 py-4 text-base tracking-bold border-2 rounded-2xl group-hover:bg-primary group-hover:border-primary group-hover:text-white transition-all duration-300">
-                                                Ver Detalhes da Vaga
-                                            </Button>
-                                        </Link>
-                                    </CardFooter>
-                                </Card>
-                            ))}
+                                            <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed">
+                                                {job.description}
+                                            </p>
+                                        </CardContent>
+                                        <CardFooter className="p-8 pt-6">
+                                            <Link href={`/vagas/${job.id}`} className="w-full">
+                                                <Button variant="outline" className="w-full h-14 py-4 text-base tracking-bold border-2 rounded-2xl group-hover:bg-primary group-hover:border-primary group-hover:text-white transition-all duration-300">
+                                                    Ver Detalhes da Vaga
+                                                </Button>
+                                            </Link>
+                                        </CardFooter>
+                                    </Card>
+                                )
+                            })}
                         </div>
                     )}
                 </div>

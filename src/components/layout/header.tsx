@@ -31,16 +31,28 @@ export function Header() {
                         Vagas
                     </Link>
                     <Link
-                        href="/contato"
+                        href="/servicos"
                         className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
                     >
-                        Contato
+                        Serviços
+                    </Link>
+                    <Link
+                        href="/empresas"
+                        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                    >
+                        Para Empresas
                     </Link>
                     <Link
                         href="/sobre"
                         className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
                     >
                         Sobre
+                    </Link>
+                    <Link
+                        href="/contato"
+                        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                    >
+                        Contato
                     </Link>
                 </nav>
 
@@ -79,6 +91,18 @@ export function Header() {
                                 className="text-lg font-medium hover:text-primary"
                             >
                                 Divulgar vaga
+                            </Link>
+                            <Link
+                                href="/servicos"
+                                className="text-lg font-medium hover:text-primary"
+                            >
+                                Serviços
+                            </Link>
+                            <Link
+                                href="/empresas"
+                                className="text-lg font-medium hover:text-primary"
+                            >
+                                Para Empresas
                             </Link>
                             <Link
                                 href="/contato"

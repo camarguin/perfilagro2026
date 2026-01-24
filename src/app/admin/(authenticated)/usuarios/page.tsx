@@ -17,6 +17,8 @@ interface UserRole {
     created_at: string
 }
 
+import { inviteAdmin } from './actions'
+
 export default function UsersPage() {
     const [users, setUsers] = useState<UserRole[]>([])
     const [loading, setLoading] = useState(true)
@@ -49,38 +51,20 @@ export default function UsersPage() {
 
         setIsAdding(true)
         try {
-            // NOTE: This insert might fail if the schema enforces user_id matching auth.users immediately
-            // and we don't know the ID.
-            // Ideally, we just store the email and a trigger/RLS handles the rest, 
-            // OR we change the schema to make user_id nullable for invites.
-            // For this implementation, we try to insert just email/role.
-            // If the schema provided was "user_id NOT NULL", this will fail.
-            // We assume the user might modify schema to allow NULL user_id for 'invites'.
+            const result = await inviteAdmin(newEmail)
 
-            const { error } = await supabase
-                .from('user_roles')
-                .insert({
-                    email: newEmail,
-                    role: 'admin',
-                    // user_id is omitted. If schema requires it, this will error.
-                    // We recommend making user_id NULLABLE in schema for this flow.
-                })
-
-            if (error) {
-                if (error.code === '23502') { // Not Null violation
-                    alert('Erro: O esquema do banco exige que o usuário já tenha cadastro (user_id). Peça para o usuário se cadastrar primeiro ou altere o esquema para permitir user_id nulo.')
-                } else {
-                    throw error
-                }
+            if (result.error) {
+                alert('Erro ao convidar: ' + result.error)
                 return
             }
 
             setNewEmail('')
             setIsOpen(false)
             fetchUsers()
+            alert('Convite enviado com sucesso para: ' + newEmail)
         } catch (error: any) {
             console.error('Error adding user:', error)
-            alert('Erro ao adicionar administrador: ' + error.message)
+            alert('Erro inesperado: ' + error.message)
         } finally {
             setIsAdding(false)
         }

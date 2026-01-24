@@ -21,6 +21,7 @@ import {
     FormDescription
 } from "@/components/ui/form"
 import { Upload, User, Mail, Phone, MapPin, Briefcase, FileText, CheckCircle2, Loader2 } from "lucide-react"
+import { supabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from "framer-motion"
 import Link from 'next/link'
 
@@ -28,15 +29,21 @@ const formSchema = z.object({
     name: z.string().min(3, 'Nome muito curto'),
     email: z.string().email('Email inválido'),
     phone: z.string().min(10, 'Telefone inválido'),
-    city: z.string().min(2, 'Cidade obrigatória'),
-    category: z.string().min(1, 'Selecione uma categoria'),
-    skills: z.string().min(10, 'Conte um pouco mais sobre você'),
+    region: z.string().min(2, 'Região/Estado obrigatório'),
+    category: z.string().min(1, 'Selecione uma área profissional'),
+    seniority: z.string().min(1, 'Selecione sua senioridade'),
+    experience: z.string().optional(),
     terms: z.boolean().refine(val => val === true, 'Você precisa aceitar os termos')
 })
+
+import { toast } from "sonner"
 
 export default function CadastroCandidatoPage() {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [success, setSuccess] = useState(false)
+    const [resumeFile, setResumeFile] = useState<File | null>(null)
+
+    const [existingResumeUrl, setExistingResumeUrl] = useState<string | null>(null)
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -44,20 +51,108 @@ export default function CadastroCandidatoPage() {
             name: '',
             email: '',
             phone: '',
-            city: '',
+            region: '',
             category: '',
-            skills: '',
+            seniority: '',
+            experience: '',
             terms: false
         },
     })
 
+    async function checkExistingCandidate(email: string) {
+        try {
+            const { data } = await supabase
+                .from('candidates')
+                .select('resume_url, region, category, seniority, name, phone, experience')
+                .eq('email', email)
+                .order('created_at', { ascending: false })
+                .limit(1)
+
+            if (data && data[0]) {
+                setExistingResumeUrl(data[0].resume_url)
+                const currentValues = form.getValues()
+                if (!currentValues.name) {
+                    form.reset({
+                        ...currentValues,
+                        name: data[0].name,
+                        email: email,
+                        phone: data[0].phone,
+                        region: data[0].region,
+                        category: data[0].category,
+                        seniority: data[0].seniority,
+                        experience: data[0].experience || ''
+                    })
+                }
+                toast.info("Vimos que você já tem um cadastro. Seus dados foram preenchidos!", {
+                    description: "Você pode atualizar os campos se desejar."
+                })
+            } else {
+                setExistingResumeUrl(null)
+            }
+        } catch (err) {
+            console.error('Error checking existing candidate:', err)
+        }
+    }
+
     async function onSubmit(values: z.infer<typeof formSchema>) {
+        if (!resumeFile && !existingResumeUrl) {
+            toast.error("Por favor, anexe seu currículo.")
+            return
+        }
+
         setIsSubmitting(true)
-        // Mock submission
-        setTimeout(() => {
-            setIsSubmitting(false)
+        try {
+            // Save to localStorage
+            localStorage.setItem('perfilagro_user_data', JSON.stringify({
+                name: values.name,
+                email: values.email,
+                phone: values.phone,
+                region: values.region,
+                category: values.category,
+                seniority: values.seniority
+            }))
+
+            let resumePath = existingResumeUrl
+
+            if (resumeFile) {
+                const fileExt = resumeFile.name.split('.').pop()
+                const fileName = `direct/${Date.now()}.${fileExt}`
+
+                const { error: uploadError } = await supabase.storage
+                    .from('resumes')
+                    .upload(fileName, resumeFile)
+
+                if (uploadError) throw uploadError
+                resumePath = fileName
+            }
+
+            // Insert Candidate
+            const { error: insertError } = await supabase
+                .from('candidates')
+                .insert({
+                    name: values.name,
+                    email: values.email,
+                    phone: values.phone,
+                    region: values.region,
+                    category: values.category,
+                    seniority: values.seniority,
+                    experience: values.experience,
+                    resume_url: resumePath,
+                    status: 'Novo'
+                })
+
+            if (insertError) throw insertError
+
             setSuccess(true)
-        }, 1500)
+            toast.success("Cadastro realizado com sucesso!")
+            form.reset()
+            setResumeFile(null)
+        } catch (error) {
+            console.error('Error submitting candidate:', error)
+            toast.error("Erro ao realizar cadastro. Tente novamente.")
+        } finally {
+            setIsSubmitting(false)
+        }
     }
 
     if (success) {
@@ -183,7 +278,16 @@ export default function CadastroCandidatoPage() {
                                                     <FormItem className="space-y-3">
                                                         <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Email Principal</FormLabel>
                                                         <FormControl>
-                                                            <Input placeholder="seu@email.com.br" type="email" className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6" {...field} />
+                                                            <Input
+                                                                placeholder="seu@email.com.br"
+                                                                type="email"
+                                                                className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6"
+                                                                {...field}
+                                                                onBlur={(e) => {
+                                                                    field.onBlur();
+                                                                    checkExistingCandidate(e.target.value);
+                                                                }}
+                                                            />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>
@@ -204,12 +308,12 @@ export default function CadastroCandidatoPage() {
                                             />
                                             <FormField
                                                 control={form.control}
-                                                name="city"
+                                                name="region"
                                                 render={({ field }) => (
                                                     <FormItem className="space-y-3">
-                                                        <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Cidade - UF</FormLabel>
+                                                        <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Região / Estado</FormLabel>
                                                         <FormControl>
-                                                            <Input placeholder="Onde você reside?" className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6" {...field} />
+                                                            <Input placeholder="Ex: MT, Maranhão, Balsas..." className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6" {...field} />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>
@@ -224,47 +328,76 @@ export default function CadastroCandidatoPage() {
                                             <div className="p-2 rounded-xl bg-gray-50 text-gray-400">
                                                 <Briefcase className="h-5 w-5" />
                                             </div>
-                                            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">Objetivos</h3>
+                                            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">Perfil Profissional</h3>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            <FormField
+                                                control={form.control}
+                                                name="category"
+                                                render={({ field }) => (
+                                                    <FormItem className="space-y-3">
+                                                        <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Área de Atuação</FormLabel>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <FormControl>
+                                                                <SelectTrigger className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6 shadow-none">
+                                                                    <SelectValue placeholder="Selecione sua área" />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent className="rounded-2xl border-none shadow-2xl p-2">
+                                                                <SelectItem value="Agronômico / Técnico" className="rounded-xl py-3 px-4 focus:bg-primary/5">Agronômico / Técnico</SelectItem>
+                                                                <SelectItem value="Comercial / Vendas" className="rounded-xl py-3 px-4 focus:bg-primary/5">Comercial / Vendas</SelectItem>
+                                                                <SelectItem value="Operacional / Maquinário" className="rounded-xl py-3 px-4 focus:bg-primary/5">Operacional / Maquinário</SelectItem>
+                                                                <SelectItem value="Gestão / Administrativo" className="rounded-xl py-3 px-4 focus:bg-primary/5">Gestão / Administrativo</SelectItem>
+                                                                <SelectItem value="Pecuária" className="rounded-xl py-3 px-4 focus:bg-primary/5">Pecuária</SelectItem>
+                                                                <SelectItem value="Outros" className="rounded-xl py-3 px-4 focus:bg-primary/5">Outros</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+
+                                            <FormField
+                                                control={form.control}
+                                                name="seniority"
+                                                render={({ field }) => (
+                                                    <FormItem className="space-y-3">
+                                                        <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Nível de Experiência</FormLabel>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <FormControl>
+                                                                <SelectTrigger className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6 shadow-none">
+                                                                    <SelectValue placeholder="Selecione seu nível" />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent className="rounded-2xl border-none shadow-2xl p-2">
+                                                                <SelectItem value="Estagiário" className="rounded-xl py-3 px-4 focus:bg-primary/5">Estagiário</SelectItem>
+                                                                <SelectItem value="Júnior" className="rounded-xl py-3 px-4 focus:bg-primary/5">Júnior</SelectItem>
+                                                                <SelectItem value="Pleno" className="rounded-xl py-3 px-4 focus:bg-primary/5">Pleno</SelectItem>
+                                                                <SelectItem value="Sênior" className="rounded-xl py-3 px-4 focus:bg-primary/5">Sênior</SelectItem>
+                                                                <SelectItem value="Especialista / Gestor" className="rounded-xl py-3 px-4 focus:bg-primary/5">Especialista / Gestor</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
                                         </div>
 
                                         <FormField
                                             control={form.control}
-                                            name="category"
+                                            name="experience"
                                             render={({ field }) => (
                                                 <FormItem className="space-y-3">
-                                                    <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Cargo de Interesse</FormLabel>
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                        <FormControl>
-                                                            <SelectTrigger className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6 shadow-none">
-                                                                <SelectValue placeholder="Selecione sua área" />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectContent className="rounded-2xl border-none shadow-2xl p-2">
-                                                            <SelectItem value="agronomia" className="rounded-xl py-3 px-4 focus:bg-primary/5">Agronomia / Técnico</SelectItem>
-                                                            <SelectItem value="operacional" className="rounded-xl py-3 px-4 focus:bg-primary/5">Operacional / Maquinário</SelectItem>
-                                                            <SelectItem value="gestao" className="rounded-xl py-3 px-4 focus:bg-primary/5">Gestão / Administrativo</SelectItem>
-                                                            <SelectItem value="comercial" className="rounded-xl py-3 px-4 focus:bg-primary/5">Comercial / Vendas</SelectItem>
-                                                            <SelectItem value="pecuaria" className="rounded-xl py-3 px-4 focus:bg-primary/5">Pecuária</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-
-                                        <FormField
-                                            control={form.control}
-                                            name="skills"
-                                            render={({ field }) => (
-                                                <FormItem className="space-y-3">
-                                                    <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Resumo de Qualificações</FormLabel>
+                                                    <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Resumo Profissional (Opcional)</FormLabel>
                                                     <FormControl>
                                                         <Textarea
-                                                            placeholder="Fale um pouco sobre sua trajetória profissional..."
-                                                            className="min-h-[160px] bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-3xl font-medium p-8 leading-relaxed resize-none"
+                                                            placeholder="Fale brevemente sobre sua experiência..."
+                                                            className="min-h-[120px] bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-3xl font-medium p-8 leading-relaxed resize-none"
                                                             {...field}
                                                         />
                                                     </FormControl>
+                                                    <FormDescription className="text-[10px] ml-2 font-medium">Isso ajuda o recrutador a te encontrar mais rápido.</FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
@@ -285,12 +418,15 @@ export default function CadastroCandidatoPage() {
                                                 <div className="h-16 w-16 rounded-2xl bg-white shadow-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-500">
                                                     <Upload className="h-8 w-8 text-primary" />
                                                 </div>
-                                                <p className="font-bold text-gray-900 mb-1">Anexar Currículo</p>
+                                                <p className="font-bold text-gray-900 mb-1">
+                                                    {resumeFile ? resumeFile.name : 'Anexar Currículo'}
+                                                </p>
                                                 <p className="text-xs text-gray-400 font-medium">PNG, PDF ou DOCX (Max 5MB)</p>
                                                 <Input
                                                     type="file"
                                                     className="absolute inset-0 opacity-0 cursor-pointer"
                                                     accept=".pdf,.doc,.docx"
+                                                    onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
                                                 />
                                             </div>
                                         </div>

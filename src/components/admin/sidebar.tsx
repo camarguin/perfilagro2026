@@ -49,12 +49,6 @@ export function AdminSidebar() {
                             Candidatos
                         </Button>
                     </Link>
-                    <Link href="/admin/curriculos" className="block">
-                        <Button variant="ghost" className="w-full justify-start gap-2">
-                            <FileText className="h-4 w-4" />
-                            Banco de Currículos
-                        </Button>
-                    </Link>
                     <Link href="/admin/usuarios" className="block">
                         <Button variant="ghost" className="w-full justify-start gap-2">
                             <Users className="h-4 w-4" />
