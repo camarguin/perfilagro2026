@@ -25,7 +25,7 @@ export default function ServicesPage() {
                             <div className="absolute -inset-4 bg-secondary/20 rounded-3xl -rotate-2 blur-xl"></div>
                             <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border/50">
                                 {/* Placeholder for Recruitment Image - could be a local asset or external */}
-                                <div className="aspect-[4/3] bg-muted flex items-center justify-center text-muted-foreground bg-[url('https://images.unsplash.com/photo-1573164713988-8665fc963095?q=80&w=2069&auto=format&fit=crop')] bg-cover bg-center">
+                                <div className="aspect-[4/3] bg-muted flex items-center justify-center text-muted-foreground bg-[url('/agro-recruitment.png')] bg-cover bg-center">
                                 </div>
                             </div>
                         </div>
@@ -126,7 +126,7 @@ export default function ServicesPage() {
                             <CardFooter className="flex flex-col items-start gap-4 mt-auto">
                                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">CTA</p>
                                 <p className="text-sm italic text-foreground mb-2">Ganhe tempo na sua contratação.</p>
-                                <Link href="/admin/login" className="w-full">
+                                <Link href="/contato" className="w-full">
                                     <Button variant="outline" className="w-full border-2 group-hover:border-primary group-hover:text-primary">
                                         Acessar banco de talentos
                                     </Button>

@@ -8,7 +8,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { supabase } from '@/lib/supabase'
 import { Loader2, Plus, Trash2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Label } from '@/components/ui/label'
+import { toast } from 'sonner'
 
 interface UserRole {
     id: string
@@ -54,36 +65,42 @@ export default function UsersPage() {
             const result = await inviteAdmin(newEmail)
 
             if (result.error) {
-                alert('Erro ao convidar: ' + result.error)
+                toast.error('Erro ao convidar: ' + result.error)
                 return
             }
 
             setNewEmail('')
             setIsOpen(false)
             fetchUsers()
-            alert('Convite enviado com sucesso para: ' + newEmail)
+            toast.success('Convite enviado com sucesso para: ' + newEmail)
         } catch (error: any) {
             console.error('Error adding user:', error)
-            alert('Erro inesperado: ' + error.message)
+            toast.error('Erro inesperado: ' + error.message)
         } finally {
             setIsAdding(false)
         }
     }
 
-    async function handleRemoveUser(id: string) {
-        if (!confirm('Tem certeza que deseja remover este administrador?')) return
+    const [userToDelete, setUserToDelete] = useState<string | null>(null)
+
+    async function handleRemoveUser() {
+        if (!userToDelete) return
 
         try {
             const { error } = await supabase
                 .from('user_roles')
                 .delete()
-                .eq('id', id)
+                .eq('id', userToDelete)
 
             if (error) throw error
+
             fetchUsers()
+            toast.success('Usuário removido com sucesso.')
         } catch (error) {
             console.error('Error removing user:', error)
-            alert('Erro ao remover usuário.')
+            toast.error('Erro ao remover usuário.')
+        } finally {
+            setUserToDelete(null)
         }
     }
 
@@ -172,7 +189,7 @@ export default function UsersPage() {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={() => handleRemoveUser(user.id)}
+                                                onClick={() => setUserToDelete(user.id)}
                                                 className="text-red-500 hover:text-red-700 hover:bg-red-50"
                                             >
                                                 <Trash2 className="h-4 w-4" />
@@ -185,6 +202,28 @@ export default function UsersPage() {
                     </Table>
                 </CardContent>
             </Card>
+
+            <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Essa ação não pode ser descrita. Isso excluirá permanentemente o usuário
+                            e removerá seus dados de nossos servidores.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleRemoveUser}
+                            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                        >
+                            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            Continuar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }

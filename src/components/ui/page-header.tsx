@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 interface PageHeaderProps {
     title: string;
     description: string;
-    badge: string;
+    badge?: string;
     imageSrc?: string;
     align?: "center" | "left";
     className?: string;
@@ -29,11 +29,13 @@ export function PageHeader({
 
             {/* Content */}
             <div className={cn("container relative z-10 mx-auto", align === "center" ? "text-center" : "text-left")}>
-                <div className={cn("inline-flex mb-6", align === "center" ? "mx-auto" : "")}>
-                    <Badge className="bg-white/20 text-white hover:bg-white/30 border-none px-4 py-1.5 text-sm backdrop-blur-md uppercase tracking-wider font-medium">
-                        {badge}
-                    </Badge>
-                </div>
+                {badge && (
+                    <div className={cn("inline-flex mb-6", align === "center" ? "mx-auto" : "")}>
+                        <Badge className="bg-white/20 text-white hover:bg-white/30 border-none px-4 py-1.5 text-sm backdrop-blur-md uppercase tracking-wider font-medium">
+                            {badge}
+                        </Badge>
+                    </div>
+                )}
 
                 <h1 className={cn("font-heading text-4xl font-bold tracking-tight text-white md:text-6xl max-w-5xl mb-6 leading-tight", align === "center" ? "mx-auto" : "")}>
                     {title}

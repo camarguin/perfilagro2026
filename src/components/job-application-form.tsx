@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -15,12 +15,14 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
-import { Loader2, CheckCircle2 } from 'lucide-react'
+import { Loader2, CheckCircle2, XIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import Link from 'next/link'
+import { Checkbox } from '@/components/ui/checkbox'
 
 const formSchema = z.object({
     name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -29,6 +31,7 @@ const formSchema = z.object({
     region: z.string().min(2, 'Região é obrigatória'),
     category: z.string().min(1, 'Área é obrigatória'),
     seniority: z.string().min(1, 'Senioridade é obrigatória'),
+    privacyPolicy: z.boolean().refine(val => val === true, { message: 'Você precisa aceitar a política de privacidade' }),
 })
 
 export function JobApplicationForm({ jobId, jobTitle }: { jobId: string; jobTitle: string }) {
@@ -37,6 +40,7 @@ export function JobApplicationForm({ jobId, jobTitle }: { jobId: string; jobTitl
     const [success, setSuccess] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
     const [existingResumeUrl, setExistingResumeUrl] = useState<string | null>(null)
+    const toastShownRef = useRef(false)
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -47,6 +51,7 @@ export function JobApplicationForm({ jobId, jobTitle }: { jobId: string; jobTitl
             region: '',
             category: '',
             seniority: '',
+            privacyPolicy: false,
         },
     })
 
@@ -88,11 +93,16 @@ export function JobApplicationForm({ jobId, jobTitle }: { jobId: string; jobTitl
                         region: data[0].region,
                         category: data[0].category,
                         seniority: data[0].seniority,
+                        privacyPolicy: currentValues.privacyPolicy
                     })
                 }
-                toast.info("Seus dados foram preenchidos automaticamente!", {
-                    description: "Reutilizaremos seu último currículo enviado."
-                })
+
+                if (!toastShownRef.current) {
+                    toast.info("Seus dados foram preenchidos automaticamente!", {
+                        description: "Reutilizaremos seu último currículo enviado."
+                    })
+                    toastShownRef.current = true
+                }
             }
         } catch (err) {
             console.error('Error checking existing candidate:', err)
@@ -160,7 +170,7 @@ export function JobApplicationForm({ jobId, jobTitle }: { jobId: string; jobTitl
                     Candidatar-se para esta vaga
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-[0_32px_64px_-12px_rgba(0,0,0,0.2)]">
+            <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-[0_32px_64px_-12px_rgba(0,0,0,0.2)] max-h-[90vh] overflow-y-auto custom-scrollbar" showCloseButton={false}>
                 {success ? (
                     <div className="bg-white p-10 flex flex-col items-center text-center animate-in zoom-in-95 duration-500">
                         <div className="h-24 w-24 rounded-full bg-green-50 flex items-center justify-center mb-6 ring-8 ring-green-50/50">
@@ -195,12 +205,20 @@ export function JobApplicationForm({ jobId, jobTitle }: { jobId: string; jobTitl
                     <>
                         <div className="bg-primary pt-10 pb-12 px-10 text-white relative">
                             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1595113316349-9fa4ee24f884?q=80&w=2072&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay" />
-                            <DialogHeader className="relative z-10 text-left">
+                            <DialogHeader className="relative z-10 text-left pr-8">
                                 <DialogTitle className="text-3xl font-black mb-2">Quase lá!</DialogTitle>
                                 <DialogDescription className="text-primary-foreground/80 text-base font-medium">
                                     Preencha seus dados para completar a candidatura em <span className="text-white font-bold">{jobTitle}</span>.
                                 </DialogDescription>
                             </DialogHeader>
+                            <Button
+                                onClick={() => setIsOpen(false)}
+                                variant="ghost"
+                                size="icon"
+                                className="absolute top-6 right-6 text-white/50 hover:text-white hover:bg-white/10 rounded-full z-20"
+                            >
+                                <XIcon className="h-5 w-5" />
+                            </Button>
                         </div>
 
                         <div className="p-10 -mt-8 bg-white rounded-t-[2rem] relative z-20">
@@ -260,7 +278,7 @@ export function JobApplicationForm({ jobId, jobTitle }: { jobId: string; jobTitl
                                             />
                                         </div>
 
-                                        <div className="grid grid-cols-1 gap-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <FormField
                                                 control={form.control}
                                                 name="region"
@@ -275,93 +293,116 @@ export function JobApplicationForm({ jobId, jobTitle }: { jobId: string; jobTitl
                                                 )}
                                             />
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <FormField
-                                                    control={form.control}
-                                                    name="category"
-                                                    render={({ field }) => (
-                                                        <FormItem className="space-y-2">
-                                                            <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">Área</FormLabel>
-                                                            <Select onValueChange={field.onChange} value={field.value}>
-                                                                <FormControl>
-                                                                    <SelectTrigger className="h-12 bg-gray-50 border-none focus:bg-white focus:ring-primary transition-all rounded-xl font-medium shadow-none">
-                                                                        <SelectValue placeholder="Selecione" />
-                                                                    </SelectTrigger>
-                                                                </FormControl>
-                                                                <SelectContent className="rounded-xl border-none shadow-2xl">
-                                                                    <SelectItem value="Agronômico / Técnico">Agronômico</SelectItem>
-                                                                    <SelectItem value="Comercial / Vendas">Comercial</SelectItem>
-                                                                    <SelectItem value="Operacional / Maquinário">Operacional</SelectItem>
-                                                                    <SelectItem value="Gestão / Administrativo">Gestão</SelectItem>
-                                                                    <SelectItem value="Pecuária">Pecuária</SelectItem>
-                                                                    <SelectItem value="Outros">Outros</SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
-
-                                                <FormField
-                                                    control={form.control}
-                                                    name="seniority"
-                                                    render={({ field }) => (
-                                                        <FormItem className="space-y-2">
-                                                            <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">Nível</FormLabel>
-                                                            <Select onValueChange={field.onChange} value={field.value}>
-                                                                <FormControl>
-                                                                    <SelectTrigger className="h-12 bg-gray-50 border-none focus:bg-white focus:ring-primary transition-all rounded-xl font-medium shadow-none">
-                                                                        <SelectValue placeholder="Selecione" />
-                                                                    </SelectTrigger>
-                                                                </FormControl>
-                                                                <SelectContent className="rounded-xl border-none shadow-2xl">
-                                                                    <SelectItem value="Estagiário">Estagiário</SelectItem>
-                                                                    <SelectItem value="Júnior">Júnior</SelectItem>
-                                                                    <SelectItem value="Pleno">Pleno</SelectItem>
-                                                                    <SelectItem value="Sênior">Sênior</SelectItem>
-                                                                    <SelectItem value="Especialista / Gestor">Especialista</SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
-                                            </div>
+                                            <FormField
+                                                control={form.control}
+                                                name="category"
+                                                render={({ field }) => (
+                                                    <FormItem className="space-y-2">
+                                                        <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">Área</FormLabel>
+                                                        <Select onValueChange={field.onChange} value={field.value}>
+                                                            <FormControl>
+                                                                <SelectTrigger className="h-12 bg-gray-50 border-none focus:bg-white focus:ring-primary transition-all rounded-xl font-medium shadow-none">
+                                                                    <SelectValue placeholder="Selecione" />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent className="rounded-xl border-none shadow-2xl">
+                                                                <SelectItem value="Agronômico / Técnico">Agronômico</SelectItem>
+                                                                <SelectItem value="Comercial / Vendas">Comercial</SelectItem>
+                                                                <SelectItem value="Operacional / Maquinário">Operacional</SelectItem>
+                                                                <SelectItem value="Gestão / Administrativo">Gestão</SelectItem>
+                                                                <SelectItem value="Pecuária">Pecuária</SelectItem>
+                                                                <SelectItem value="Outros">Outros</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">
-                                                {existingResumeUrl ? 'Atualizar Currículo (Opcional)' : 'Currículo Atualizado (PDF)'}
-                                            </FormLabel>
-                                            <div className={`flex items-center gap-4 p-4 border-2 border-dashed rounded-2xl transition-all group ${existingResumeUrl ? 'border-green-100 bg-green-50/30' : 'border-gray-100 bg-gray-50/30'}`}>
-                                                <Input
-                                                    type="file"
-                                                    accept=".pdf,.doc,.docx"
-                                                    onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
-                                                    className="cursor-pointer file:bg-primary/10 file:text-primary file:border-none file:px-4 file:py-1 file:rounded-lg file:text-xs file:font-black file:shadow-sm"
-                                                />
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <FormField
+                                                control={form.control}
+                                                name="seniority"
+                                                render={({ field }) => (
+                                                    <FormItem className="space-y-2">
+                                                        <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">Nível</FormLabel>
+                                                        <Select onValueChange={field.onChange} value={field.value}>
+                                                            <FormControl>
+                                                                <SelectTrigger className="h-12 bg-gray-50 border-none focus:bg-white focus:ring-primary transition-all rounded-xl font-medium shadow-none">
+                                                                    <SelectValue placeholder="Selecione" />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent className="rounded-xl border-none shadow-2xl">
+                                                                <SelectItem value="Estagiário">Estagiário</SelectItem>
+                                                                <SelectItem value="Júnior">Júnior</SelectItem>
+                                                                <SelectItem value="Pleno">Pleno</SelectItem>
+                                                                <SelectItem value="Sênior">Sênior</SelectItem>
+                                                                <SelectItem value="Especialista / Gestor">Especialista</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <div className="space-y-2">
+                                                <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">
+                                                    {existingResumeUrl ? 'Novo Currículo (Opcional)' : 'Currículo (PDF)'}
+                                                </FormLabel>
+                                                <div className={`flex items-center gap-4 p-2 border-2 border-dashed rounded-xl transition-all group ${existingResumeUrl ? 'border-green-100 bg-green-50/30' : 'border-gray-100 bg-gray-50/30'}`}>
+                                                    <Input
+                                                        type="file"
+                                                        accept=".pdf,.doc,.docx"
+                                                        onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
+                                                        className="cursor-pointer border-none shadow-none h-8 text-[11px] file:bg-primary/10 file:text-primary file:border-none file:px-2 file:py-0.5 file:rounded file:text-[10px] file:font-black"
+                                                    />
+                                                </div>
                                             </div>
-                                            {existingResumeUrl && !resumeFile && (
-                                                <p className="text-[10px] text-green-600 font-bold flex items-center gap-1">
-                                                    <CheckCircle2 className="h-3 w-3" /> Usaremos seu último currículo enviado.
-                                                </p>
-                                            )}
-                                            <p className="text-[10px] text-muted-foreground font-medium italic">
-                                                * Seus dados ficam salvos para facilitar as próximas candidaturas.
+                                        </div>
+                                        {existingResumeUrl && !resumeFile && (
+                                            <p className="text-[10px] text-green-600 font-bold flex items-center gap-1">
+                                                <CheckCircle2 className="h-3 w-3" /> Usaremos seu último currículo enviado.
                                             </p>
-                                        </div>
+                                        )}
+                                        <p className="text-[10px] text-muted-foreground font-medium italic">
+                                            * Seus dados ficam salvos para facilitar as próximas candidaturas.
+                                        </p>
                                     </div>
 
-                                    <Button type="submit" variant="cta" size="xl" className="w-full mt-4" disabled={isSubmitting}>
-                                        {isSubmitting ? (
-                                            <>
-                                                <Loader2 className="mr-3 h-6 w-6 animate-spin" />
-                                                Enviando...
-                                            </>
-                                        ) : (
-                                            'Finalizar Candidatura'
-                                        )}
-                                    </Button>
+                                    <div className="space-y-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="privacyPolicy"
+                                            render={({ field }) => (
+                                                <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-xl bg-gray-50/50 p-4 border border-gray-100">
+                                                    <FormControl>
+                                                        <Checkbox
+                                                            checked={field.value}
+                                                            onCheckedChange={field.onChange}
+                                                            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                                        />
+                                                    </FormControl>
+                                                    <div className="space-y-1 leading-none">
+                                                        <FormLabel className="text-sm font-medium text-gray-600 cursor-pointer">
+                                                            Li e concordo com a <Link href="/politica-privacidade" className="text-primary font-bold hover:underline" target="_blank">Política de Privacidade</Link>
+                                                        </FormLabel>
+                                                        <FormMessage />
+                                                    </div>
+                                                </FormItem>
+                                            )}
+                                        />
+
+                                        <Button type="submit" variant="cta" size="xl" className="w-full" disabled={isSubmitting}>
+                                            {isSubmitting ? (
+                                                <>
+                                                    <Loader2 className="mr-3 h-6 w-6 animate-spin" />
+                                                    Enviando...
+                                                </>
+                                            ) : (
+                                                'Finalizar Candidatura'
+                                            )}
+                                        </Button>
+                                    </div>
                                 </form>
                             </Form>
                         </div>

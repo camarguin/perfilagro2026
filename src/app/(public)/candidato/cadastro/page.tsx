@@ -33,7 +33,7 @@ const formSchema = z.object({
     category: z.string().min(1, 'Selecione uma área profissional'),
     seniority: z.string().min(1, 'Selecione sua senioridade'),
     experience: z.string().optional(),
-    terms: z.boolean().refine(val => val === true, 'Você precisa aceitar os termos')
+    privacyPolicy: z.boolean().refine(val => val === true, { message: 'Você precisa aceitar a política de privacidade' }),
 })
 
 import { toast } from "sonner"
@@ -55,7 +55,7 @@ export default function CadastroCandidatoPage() {
             category: '',
             seniority: '',
             experience: '',
-            terms: false
+            privacyPolicy: false
         },
     })
 
@@ -124,6 +124,18 @@ export default function CadastroCandidatoPage() {
 
                 if (uploadError) throw uploadError
                 resumePath = fileName
+            }
+
+            // Check for existing candidate again before insert
+            const { data: existing } = await supabase
+                .from('candidates')
+                .select('id')
+                .eq('email', values.email)
+                .maybeSingle()
+
+            if (existing) {
+                toast.error("Este email já está cadastrado em nosso banco.")
+                return
             }
 
             // Insert Candidate
@@ -433,9 +445,9 @@ export default function CadastroCandidatoPage() {
 
                                         <FormField
                                             control={form.control}
-                                            name="terms"
+                                            name="privacyPolicy"
                                             render={({ field }) => (
-                                                <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4">
+                                                <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-xl bg-gray-50/50 p-4 border border-gray-100">
                                                     <FormControl>
                                                         <Checkbox
                                                             checked={field.value}
@@ -443,10 +455,11 @@ export default function CadastroCandidatoPage() {
                                                             className="h-6 w-6 rounded-lg border-2 border-gray-200 data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-colors"
                                                         />
                                                     </FormControl>
-                                                    <div className="space-y-1 leading-none">
-                                                        <FormLabel className="text-sm font-medium text-gray-500">
-                                                            Aceito os termos da <Link href="#" className="text-primary font-bold hover:underline">Política de Privacidade</Link>.
+                                                    <div className="space-y-1 leading-none font-medium">
+                                                        <FormLabel className="text-sm text-gray-600 cursor-pointer">
+                                                            Li e concordo com a <Link href="/politica-privacidade" className="text-primary font-bold hover:underline" target="_blank">Política de Privacidade</Link>
                                                         </FormLabel>
+                                                        <FormMessage />
                                                     </div>
                                                 </FormItem>
                                             )}

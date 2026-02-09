@@ -1,21 +1,21 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Menu, Sprout } from "lucide-react";
 
 export function Header() {
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container mx-auto px-4 flex h-16 items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <Link href="/" className="flex items-center gap-2">
-                        <div className="relative h-10 w-40">
+                <div className="flex items-center">
+                    <Link href="/" className="flex items-center">
+                        <div className="relative h-12 w-48 overflow-hidden">
                             <Image
                                 src="/PerfilagroLogo.svg"
                                 alt="Perfil Agro"
                                 fill
-                                className="object-contain"
+                                className="object-contain object-left transition-transform duration-300"
                                 priority
                             />
                         </div>
@@ -57,11 +57,7 @@ export function Header() {
                 </nav>
 
                 <div className="hidden md:flex items-center gap-4">
-                    <Link href="/admin/login">
-                        <Button variant="ghost" size="sm">
-                            Login
-                        </Button>
-                    </Link>
+
                     <Link href="/anunciar-vaga">
                         <Button variant="outline" size="sm">Divulgar vaga</Button>
                     </Link>
@@ -79,6 +75,7 @@ export function Header() {
                         </Button>
                     </SheetTrigger>
                     <SheetContent side="right">
+                        <SheetTitle className="sr-only">Menu de Navegação</SheetTitle>
                         <nav className="flex flex-col gap-4 mt-8">
                             <Link
                                 href="/vagas"
@@ -117,11 +114,7 @@ export function Header() {
                                 Sobre
                             </Link>
                             <hr className="my-2 border-muted" />
-                            <Link href="/admin/login">
-                                <Button variant="outline" className="w-full justify-start">
-                                    Área Administrativa
-                                </Button>
-                            </Link>
+
                             <Link href="/candidato/cadastro">
                                 <Button className="w-full">Cadastre seu Currículo</Button>
                             </Link>

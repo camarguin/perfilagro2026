@@ -11,6 +11,7 @@ export default async function Home() {
     .from('jobs')
     .select('*')
     .eq('status', 'active')
+    .eq('is_approved', true)
     .order('created_at', { ascending: false })
     .limit(4);
 

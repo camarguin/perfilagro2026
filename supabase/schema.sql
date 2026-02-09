@@ -48,12 +48,21 @@ CREATE POLICY "Public can insert jobs" ON jobs FOR INSERT WITH CHECK (true); -- 
 DROP POLICY IF EXISTS "Admins can update jobs" ON jobs;
 CREATE POLICY "Admins can update jobs" ON jobs FOR UPDATE USING (auth.role() = 'authenticated');
 
+DROP POLICY IF EXISTS "Admins can delete jobs" ON jobs;
+CREATE POLICY "Admins can delete jobs" ON jobs FOR DELETE USING (auth.role() = 'authenticated');
+
 ALTER TABLE candidates ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Admins can view candidates" ON candidates;
 CREATE POLICY "Admins can view candidates" ON candidates FOR SELECT USING (auth.role() = 'authenticated');
 
 DROP POLICY IF EXISTS "Public can insert candidates" ON candidates;
 CREATE POLICY "Public can insert candidates" ON candidates FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Admins can update candidates" ON candidates;
+CREATE POLICY "Admins can update candidates" ON candidates FOR UPDATE USING (auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "Admins can delete candidates" ON candidates;
+CREATE POLICY "Admins can delete candidates" ON candidates FOR DELETE USING (auth.role() = 'authenticated');
 
 ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Admins can view roles" ON user_roles;
@@ -75,3 +84,6 @@ CREATE POLICY "Public can upload resumes" ON storage.objects FOR INSERT WITH CHE
 
 DROP POLICY IF EXISTS "Admins can view resumes" ON storage.objects;
 CREATE POLICY "Admins can view resumes" ON storage.objects FOR SELECT USING (bucket_id = 'resumes' AND auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "Admins can delete resumes" ON storage.objects;
+CREATE POLICY "Admins can delete resumes" ON storage.objects FOR DELETE USING (bucket_id = 'resumes' AND auth.role() = 'authenticated');

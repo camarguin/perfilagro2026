@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Sprout, Instagram, Facebook, Linkedin } from "lucide-react";
+import Image from "next/image";
+import { Instagram, Facebook, Linkedin } from "lucide-react";
 
 export function Footer() {
     return (
@@ -8,12 +9,14 @@ export function Footer() {
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
                     <div className="flex flex-col gap-4">
                         <div className="flex items-center gap-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                                <Sprout className="h-5 w-5 text-primary-foreground" />
+                            <div className="relative h-12 w-48">
+                                <Image
+                                    src="/PerfilagroLogo.svg"
+                                    alt="Perfil Agro"
+                                    fill
+                                    className="object-contain object-left"
+                                />
                             </div>
-                            <span className="font-heading text-xl font-bold tracking-tight text-foreground">
-                                Perfil Agro
-                            </span>
                         </div>
                         <p className="text-sm text-muted-foreground leading-relaxed">
                             Conectando talentos às melhores oportunidades do agronegócio brasileiro desde 2012.
@@ -33,11 +36,7 @@ export function Footer() {
                                     Cadastrar Currículo
                                 </Link>
                             </li>
-                            <li>
-                                <Link href="/dicas" className="hover:text-primary transition-colors">
-                                    Dicas de Carreira
-                                </Link>
-                            </li>
+
                         </ul>
                     </div>
 
@@ -65,24 +64,32 @@ export function Footer() {
                     <div>
                         <h3 className="font-heading font-semibold text-foreground mb-4">Redes Sociais</h3>
                         <div className="flex gap-4">
-                            <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                            <Link href="https://www.instagram.com/perfilagrovagas/" target="_blank" className="text-muted-foreground hover:text-primary transition-colors">
                                 <Instagram className="h-5 w-5" />
                                 <span className="sr-only">Instagram</span>
                             </Link>
-                            <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                            <Link href="https://www.facebook.com/perfilagro" target="_blank" className="text-muted-foreground hover:text-primary transition-colors">
                                 <Facebook className="h-5 w-5" />
                                 <span className="sr-only">Facebook</span>
-                            </Link>
-                            <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                                <Linkedin className="h-5 w-5" />
-                                <span className="sr-only">LinkedIn</span>
                             </Link>
                         </div>
                     </div>
                 </div>
 
-                <div className="mt-10 border-t pt-6 text-center text-sm text-muted-foreground">
+                <div className="mt-10 border-t pt-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground text-center md:text-left">
                     <p>© {new Date().getFullYear()} Perfil Agro. Todos os direitos reservados.</p>
+                    <div className="flex items-center gap-3">
+                        <span className="text-xs tracking-widest opacity-50">Desenvolvido por</span>
+                        <Link href="https://www.lgctech.net" target="_blank" className="hover:opacity-80 transition-opacity">
+                            <Image
+                                src="/LGCTechLogo.png"
+                                alt="LGCTech"
+                                width={80}
+                                height={24}
+                                className="h-8 w-auto object-contain"
+                            />
+                        </Link>
+                    </div>
                 </div>
             </div>
         </footer>

@@ -27,6 +27,9 @@ const formSchema = z.object({
     message: z.string().min(10, 'Mensagem muito curta'),
 })
 
+import { toast } from "sonner"
+import { sendContactEmail } from "@/app/actions/send-email"
+
 export default function ContatoPage() {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [success, setSuccess] = useState(false)
@@ -43,11 +46,27 @@ export default function ContatoPage() {
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsSubmitting(true)
-        // Mock submission
-        setTimeout(() => {
+
+        try {
+            const formData = new FormData()
+            formData.append('name', values.name)
+            formData.append('email', values.email)
+            formData.append('subject', values.subject)
+            formData.append('message', values.message)
+
+            const result = await sendContactEmail(formData)
+
+            if (result.success) {
+                setSuccess(true)
+            } else {
+                toast.error(result.error || "Erro ao enviar mensagem.")
+            }
+        } catch (error) {
+            console.error(error)
+            toast.error("Erro inesperado. Tente novamente.")
+        } finally {
             setIsSubmitting(false)
-            setSuccess(true)
-        }, 1500)
+        }
     }
 
     if (success) {

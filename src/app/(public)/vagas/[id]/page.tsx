@@ -42,111 +42,123 @@ export default async function JobDetailsPage(props: { params: Params }) {
     const isNew = (new Date().getTime() - new Date(job.created_at).getTime()) < 7 * 24 * 60 * 60 * 1000;
 
     return (
-        <div className="min-h-screen bg-muted/20 py-16 px-4 pt-32">
-            <div className="max-w-5xl mx-auto space-y-10">
+        <div className="min-h-screen bg-muted/20 pb-20">
+            {/* Header Section */}
+            <div className="bg-primary relative pt-32 pb-48 px-4 overflow-hidden">
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1500382017468-9049fed74a62?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay" />
+                <div className="absolute inset-0 bg-gradient-to-b from-primary/80 via-primary/90 to-primary" />
 
-                {/* Header Section */}
-                <div className="bg-white rounded-[3rem] shadow-2xl overflow-hidden ring-1 ring-black/5">
-                    {/* Dark Background Area - Now flexible height */}
-                    <div className="bg-primary relative pt-20 pb-32 px-6 md:px-12 lg:px-16">
-                        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1500382017468-9049fed74a62?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-overlay" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/60 to-transparent" />
-
-                        <div className="relative z-10 space-y-6 max-w-4xl">
-                            <div className="flex flex-wrap gap-2">
-                                {isNew && (
-                                    <Badge className="bg-secondary text-primary font-black uppercase text-[10px] tracking-widest px-3 py-1 animate-pulse border-none shadow-lg shadow-secondary/20">
-                                        Recente
-                                    </Badge>
-                                )}
-                                <Badge className="bg-white/10 text-white backdrop-blur-md border border-white/20 font-bold text-[10px] uppercase tracking-widest px-3 py-1">
-                                    {job.type}
-                                </Badge>
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-[10px] font-black uppercase tracking-widest border border-green-500/30">
-                                    <div className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
-                                    Vaga Ativa
-                                </div>
-                            </div>
-
-                            <h1 className="text-4xl md:text-6xl font-black text-white leading-[1.1] tracking-tight drop-shadow-xl">{job.title}</h1>
-
-                            <div className="flex flex-wrap gap-x-8 gap-y-3 text-sm font-bold text-white/70">
-                                <div className="flex items-center gap-2">
-                                    <MapPin className="w-4 h-4 text-secondary drop-shadow" />
-                                    {job.location}
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Briefcase className="w-4 h-4 text-secondary drop-shadow" />
-                                    {job.type}
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Calendar className="w-4 h-4 text-secondary drop-shadow" />
-                                    Publicado em {new Date(job.created_at).toLocaleDateString('pt-BR')}
-                                </div>
-                            </div>
+                <div className="relative z-10 container mx-auto space-y-8">
+                    {/* Badges */}
+                    <div className="flex flex-wrap gap-3">
+                        {isNew && (
+                            <Badge className="bg-secondary text-primary font-black uppercase text-[11px] tracking-widest px-4 py-1.5 animate-pulse border-none shadow-lg shadow-secondary/20 rounded-full">
+                                ✨ Recente
+                            </Badge>
+                        )}
+                        <Badge className="bg-white/10 text-white backdrop-blur-md border border-white/10 font-bold text-[11px] uppercase tracking-widest px-4 py-1.5 rounded-full hover:bg-white/20 transition-colors">
+                            {job.type}
+                        </Badge>
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-500/20 text-green-300 text-[11px] font-black uppercase tracking-widest border border-green-500/30">
+                            <div className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse box-shadow-green" />
+                            Vaga Ativa
                         </div>
                     </div>
 
-                    {/* Overlapping Content Area */}
-                    <div className="px-6 md:px-12 lg:px-16 pb-12 -mt-24 relative z-20">
-                        <div className="flex flex-col md:flex-row gap-8 items-end justify-between">
-                            {/* Job Image or Logo */}
-                            <div className="w-44 h-44 md:w-52 md:h-52 rounded-[2.5rem] bg-white shadow-2xl border-8 border-white flex items-center justify-center overflow-hidden shrink-0 group transition-transform hover:scale-[1.02]">
-                                {job.image_url ? (
-                                    <Image
-                                        src={job.image_url}
-                                        alt={job.title}
-                                        width={240}
-                                        height={240}
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                    />
-                                ) : (
-                                    <Briefcase className="w-20 h-20 text-primary/40" />
-                                )}
-                            </div>
+                    {/* Title */}
+                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-[1.1] tracking-tight drop-shadow-xl max-w-4xl">
+                        {job.title}
+                    </h1>
 
-                            <div className="pb-4 w-full md:w-auto">
-                                <JobApplicationForm jobId={job.id} jobTitle={job.title} />
+                    {/* Meta Info */}
+                    <div className="flex flex-wrap gap-x-8 gap-y-4 text-sm md:text-base font-bold text-white/80">
+                        <div className="flex items-center gap-2.5">
+                            <div className="p-2 rounded-full bg-white/10 text-secondary">
+                                <MapPin className="w-4 h-4" />
                             </div>
+                            {job.location}
+                        </div>
+                        <div className="flex items-center gap-2.5">
+                            <div className="p-2 rounded-full bg-white/10 text-secondary">
+                                <Briefcase className="w-4 h-4" />
+                            </div>
+                            {job.type}
+                        </div>
+                        <div className="flex items-center gap-2.5">
+                            <div className="p-2 rounded-full bg-white/10 text-secondary">
+                                <Calendar className="w-4 h-4" />
+                            </div>
+                            Publicado em {new Date(job.created_at).toLocaleDateString('pt-BR')}
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {/* Description Section */}
-                <div className="bg-white rounded-[3rem] shadow-xl p-8 md:p-12 lg:p-16 ring-1 ring-black/5">
-                    <div className="flex items-center gap-4 mb-10">
-                        <div className="p-3 rounded-2xl bg-primary/5 text-primary">
-                            <FileText className="h-6 w-6" />
+            {/* Content Section (Overlapping) */}
+            <div className="container mx-auto px-4 -mt-32 relative z-20">
+                <div className="flex flex-col lg:flex-row gap-8 items-start">
+
+                    {/* Main Content: Job Image */}
+                    <div className="w-full lg:flex-1 bg-white rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-black/5 p-2">
+                        {job.image_url ? (
+                            <div className="relative w-full rounded-[2rem] overflow-hidden bg-muted/50">
+                                <Image
+                                    src={job.image_url}
+                                    alt={`Vaga para ${job.title}`}
+                                    width={1200}
+                                    height={1600}
+                                    className="w-full h-auto object-cover"
+                                    priority
+                                    quality={100}
+                                />
+                            </div>
+                        ) : (
+                            <div className="p-12 md:p-16 space-y-10 min-h-[400px] flex flex-col justify-center">
+                                <div className="text-center space-y-4">
+                                    <div className="inline-flex p-4 rounded-3xl bg-primary/5 text-primary mb-2">
+                                        <Briefcase className="h-10 w-10" />
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-gray-900">Descrição em Texto</h3>
+                                    <p className="text-gray-500 max-w-md mx-auto">Esta vaga não possui um flyer oficial. Abaixo estão os detalhes completos.</p>
+                                </div>
+                                <div className="prose prose-lg prose-slate max-w-none 
+                                    prose-headings:font-black prose-headings:text-gray-900
+                                    prose-p:text-gray-600 prose-li:text-gray-600">
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                        {job.description}
+                                    </ReactMarkdown>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Sidebar: Application Form */}
+                    <div className="w-full lg:w-[400px] space-y-6 sticky top-8">
+                        <div className="bg-white rounded-[2.5rem] p-8 shadow-xl ring-1 ring-black/5">
+                            <div className="mb-6">
+                                <h3 className="text-2xl font-black text-gray-900 leading-tight mb-2">
+                                    Interessado nesta vaga?
+                                </h3>
+                                <p className="text-gray-500 font-medium">
+                                    Preencha o formulário abaixo e envie seu currículo diretamente para nós.
+                                </p>
+                            </div>
+
+                            <JobApplicationForm jobId={job.id} jobTitle={job.title} />
                         </div>
-                        <h2 className="text-2xl font-black text-gray-900 tracking-tight">Descrição da Oportunidade</h2>
-                    </div>
 
-                    <div className="prose prose-slate max-w-none 
-                        prose-headings:font-black prose-headings:text-gray-900 prose-headings:tracking-tight 
-                        prose-h3:text-lg prose-h3:uppercase prose-h3:tracking-widest prose-h3:text-primary prose-h3:mt-8 prose-h3:mb-4
-                        prose-p:text-gray-600 prose-p:leading-relaxed prose-p:text-lg
-                        prose-li:text-gray-600 prose-li:text-lg prose-li:leading-relaxed
-                        prose-strong:text-gray-900 prose-strong:font-black">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                            {job.description}
-                        </ReactMarkdown>
-                    </div>
-                </div>
-
-                {/* Footer CTA */}
-                <div className="bg-primary rounded-3xl p-10 text-white shadow-2xl relative overflow-hidden">
-                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1595113316349-9fa4ee24f884?q=80&w=2072&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay" />
-                    <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-                        <div>
-                            <h3 className="text-2xl font-bold mb-2">Gostou da vaga?</h3>
-                            <p className="text-primary-foreground/90">Não perca tempo e envie seu currículo agora mesmo.</p>
+                        <div className="bg-[#1A3C34] rounded-[2.5rem] p-8 shadow-xl text-center relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
+                            <div className="relative z-10 space-y-4">
+                                <h4 className="text-white font-bold text-lg">Compartilhe!</h4>
+                                <p className="text-white/70 text-sm">Ajude seus amigos a encontrarem a oportunidade perfeita no agronegócio.</p>
+                            </div>
                         </div>
-                        <JobApplicationForm jobId={job.id} jobTitle={job.title} />
                     </div>
-                </div>
 
+                </div>
             </div>
         </div>
-
     )
+
 }

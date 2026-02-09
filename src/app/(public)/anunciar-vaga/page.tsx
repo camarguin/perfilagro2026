@@ -91,7 +91,8 @@ export default function AnunciarVagaPage() {
                     location: values.location,
                     type: values.type,
                     image_url: imageUrl,
-                    status: 'active'
+                    status: 'active',
+                    is_approved: false // New jobs from public page start unapproved
                 })
 
             if (insertError) throw insertError
@@ -130,7 +131,7 @@ export default function AnunciarVagaPage() {
                     <Card className="border-none shadow-2xl rounded-[3rem] bg-white ring-1 ring-black/5 overflow-hidden">
                         <CardContent className="p-10 pt-12 text-center">
                             <p className="text-gray-500 font-medium mb-8 leading-relaxed">
-                                Parabéns! Sua vaga foi publicada com sucesso. Você pode acompanhá-la na página de listagem ou no seu painel administrativo.
+                                Parabéns! Sua vaga foi enviada com sucesso. Ela passará por uma breve moderação pela nossa equipe e em breve estará disponível no portal.
                             </p>
                             <div className="space-y-4">
                                 <Link href="/vagas" className="block">

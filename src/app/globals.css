@@ -67,12 +67,12 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.20 0.03 160);
 
-  --primary: oklch(0.35 0.08 158);
-  /* Forest Green #1A3C34 adjusted */
+  --primary: #023B3B;
+  /* Deep Forest Green */
   --primary-foreground: oklch(0.98 0.01 100);
 
-  --secondary: oklch(0.75 0.10 135);
-  /* Sage Green #9BC38E */
+  --secondary: #8AA823;
+  /* Vibrant Green */
   --secondary-foreground: oklch(0.20 0.03 160);
 
   --muted: oklch(0.96 0.01 100);
@@ -172,5 +172,16 @@
   label[for],
   select {
     cursor: pointer !important;
+  }
+}
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-primary/20 rounded-full hover:bg-primary/30;
   }
 }

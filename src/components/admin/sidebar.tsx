@@ -10,7 +10,8 @@ import {
     FileText,
     Settings,
     LogOut,
-    Sprout
+    Sprout,
+    Home
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -57,20 +58,15 @@ export function AdminSidebar() {
                     </Link>
                 </nav>
 
-                <div className="mt-8">
-                    <h4 className="mb-2 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Configurações</h4>
-                    <div className="space-y-2">
-                        <Link href="/admin/settings" className="block">
-                            <Button variant="ghost" className="w-full justify-start gap-2">
-                                <Settings className="h-4 w-4" />
-                                Ajustes
-                            </Button>
-                        </Link>
-                    </div>
-                </div>
             </div>
 
-            <div className="border-t p-4">
+            <div className="border-t p-4 space-y-2">
+                <Link href="/" className="block">
+                    <Button variant="ghost" className="w-full justify-start gap-2">
+                        <Home className="h-4 w-4" />
+                        Voltar para Home
+                    </Button>
+                </Link>
                 <Button
                     variant="outline"
                     className="w-full justify-start gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
