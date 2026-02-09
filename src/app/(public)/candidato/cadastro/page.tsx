@@ -96,7 +96,13 @@ export default function CadastroCandidatoPage() {
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         if (!resumeFile && !existingResumeUrl) {
-            toast.error("Por favor, anexe seu currículo.")
+            toast.error("Por favor, anexe seu currículo em PDF.")
+            return
+        }
+
+        // Validate PDF if a new file is provided
+        if (resumeFile && !resumeFile.type.includes('pdf')) {
+            toast.error('Somente arquivos PDF são permitidos.')
             return
         }
 
@@ -433,11 +439,11 @@ export default function CadastroCandidatoPage() {
                                                 <p className="font-bold text-gray-900 mb-1">
                                                     {resumeFile ? resumeFile.name : 'Anexar Currículo'}
                                                 </p>
-                                                <p className="text-xs text-gray-400 font-medium">PNG, PDF ou DOCX (Max 5MB)</p>
+                                                <p className="text-xs text-gray-400 font-medium">Somente arquivo PDF (Max 5MB)</p>
                                                 <Input
                                                     type="file"
                                                     className="absolute inset-0 opacity-0 cursor-pointer"
-                                                    accept=".pdf,.doc,.docx"
+                                                    accept=".pdf"
                                                     onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
                                                 />
                                             </div>

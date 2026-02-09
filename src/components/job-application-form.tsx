@@ -112,7 +112,13 @@ export function JobApplicationForm({ jobId, jobTitle }: { jobId: string; jobTitl
     async function onSubmit(values: z.infer<typeof formSchema>) {
         // Only require file if we don't have an existing one OR they uploaded a new one
         if (!resumeFile && !existingResumeUrl) {
-            toast.error('Por favor, anexe seu currículo.')
+            toast.error('Por favor, anexe seu currículo em PDF.')
+            return
+        }
+
+        // Validate PDF if a new file is provided
+        if (resumeFile && !resumeFile.type.includes('pdf')) {
+            toast.error('Somente arquivos PDF são permitidos.')
             return
         }
 
@@ -347,12 +353,12 @@ export function JobApplicationForm({ jobId, jobTitle }: { jobId: string; jobTitl
                                             />
                                             <div className="space-y-2">
                                                 <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">
-                                                    {existingResumeUrl ? 'Novo Currículo (Opcional)' : 'Currículo (PDF)'}
+                                                    {existingResumeUrl ? 'Novo Currículo (PDF Opcional)' : 'Currículo (PDF)'}
                                                 </FormLabel>
                                                 <div className={`flex items-center gap-4 p-2 border-2 border-dashed rounded-xl transition-all group ${existingResumeUrl ? 'border-green-100 bg-green-50/30' : 'border-gray-100 bg-gray-50/30'}`}>
                                                     <Input
                                                         type="file"
-                                                        accept=".pdf,.doc,.docx"
+                                                        accept=".pdf"
                                                         onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
                                                         className="cursor-pointer border-none shadow-none h-8 text-[11px] file:bg-primary/10 file:text-primary file:border-none file:px-2 file:py-0.5 file:rounded file:text-[10px] file:font-black"
                                                     />
