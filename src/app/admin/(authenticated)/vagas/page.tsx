@@ -283,11 +283,11 @@ export default function AdminVagasPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-center">
-                                                <span className={`inline-flex items-center rounded-xl px-3 py-1.5 text-[10px] font-black uppercase tracking-widest ${job.status === 'active'
+                                                <span className={`inline-flex items-center rounded-xl px-3 py-1.5 text-[10px] font-black uppercase tracking-widest ${job.is_approved
                                                     ? 'bg-green-50 text-green-600'
                                                     : 'bg-red-50 text-red-500'
                                                     }`}>
-                                                    {job.status === 'active' ? 'Ativa' : 'Inativa'}
+                                                    {job.is_approved ? 'Ativa' : 'Inativa'}
                                                 </span>
                                             </TableCell>
                                             <TableCell className="text-center">

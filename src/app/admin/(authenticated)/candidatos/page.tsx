@@ -29,6 +29,14 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
 
 export default function AdminCandidatosPage() {
     const searchParams = useSearchParams()
@@ -41,6 +49,11 @@ export default function AdminCandidatosPage() {
     const [loading, setLoading] = useState(true)
     const [statusLoading, setStatusLoading] = useState<string | null>(null)
     const [isDeleting, setIsDeleting] = useState<string | null>(null)
+    const [loadingMore, setLoadingMore] = useState(false)
+    const [hasMore, setHasMore] = useState(true)
+    const [totalCount, setTotalCount] = useState(0)
+    const [selectedCandidate, setSelectedCandidate] = useState<any | null>(null)
+    const [detailsModalOpen, setDetailsModalOpen] = useState(false)
 
     // Filter States
     const [searchTerm, setSearchTerm] = useState('')
@@ -49,6 +62,8 @@ export default function AdminCandidatosPage() {
     const [filterStatus, setFilterStatus] = useState('all')
     const [filterJobId, setFilterJobId] = useState(urlJobId || 'all')
 
+    const ITEMS_PER_PAGE = 50
+
     useEffect(() => {
         fetchInitialData()
     }, [])
@@ -56,8 +71,9 @@ export default function AdminCandidatosPage() {
     async function fetchInitialData() {
         setLoading(true)
         await Promise.all([
-            fetchCandidates(),
-            fetchJobs()
+            fetchCandidates(true),
+            fetchJobs(),
+            fetchTotalCount()
         ])
         setLoading(false)
     }
@@ -75,57 +91,90 @@ export default function AdminCandidatosPage() {
         }
     }
 
-    useEffect(() => {
-        applyFilters()
-    }, [candidates, searchTerm, filterCategory, filterSeniority, filterStatus])
-
-    async function fetchCandidates() {
+    async function fetchTotalCount() {
         try {
-            const { data, error } = await supabase
+            const { count, error } = await supabase
                 .from('candidates')
-                .select('*, jobs(title)')
+                .select('*', { count: 'exact', head: true })
+            if (error) throw error
+            setTotalCount(count || 0)
+        } catch (error) {
+            console.error('Error fetching count:', error)
+        }
+    }
+
+    useEffect(() => {
+        // Reset and refetch when filters change
+        setCandidates([])
+        setHasMore(true)
+        fetchCandidates(true)
+    }, [searchTerm, filterCategory, filterSeniority, filterStatus, filterJobId])
+
+    async function fetchCandidates(reset = false) {
+        try {
+            if (reset) {
+                setLoading(true)
+            } else {
+                setLoadingMore(true)
+            }
+
+            const from = reset ? 0 : candidates.length
+            const to = from + ITEMS_PER_PAGE - 1
+
+            let query = supabase
+                .from('candidates')
+                .select('*, jobs(title)', { count: 'exact' })
                 .order('created_at', { ascending: false })
+                .range(from, to)
+
+            // Apply filters
+            if (searchTerm) {
+                // Search in name, email, region, and experience
+                // Handles both old string format (ilike) and new JSON array format (cs)
+                query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,region.ilike.%${searchTerm}%,experience.ilike.%${searchTerm}%,experience.cs.{${searchTerm}}`)
+            }
+
+            if (filterCategory !== 'all') {
+                query = query.eq('category', filterCategory)
+            }
+
+            if (filterSeniority !== 'all') {
+                query = query.eq('seniority', filterSeniority)
+            }
+
+            if (filterStatus !== 'all') {
+                query = query.eq('status', filterStatus)
+            }
+
+            if (filterJobId !== 'all') {
+                if (filterJobId === 'direct') {
+                    query = query.is('job_id', null)
+                } else {
+                    query = query.eq('job_id', filterJobId)
+                }
+            }
+
+            const { data, error, count } = await query
 
             if (error) throw error
-            setCandidates(data || [])
+
+            if (reset) {
+                setCandidates(data || [])
+                setFilteredCandidates(data || [])
+            } else {
+                setCandidates(prev => [...prev, ...(data || [])])
+                setFilteredCandidates(prev => [...prev, ...(data || [])])
+            }
+
+            setHasMore((data?.length || 0) === ITEMS_PER_PAGE)
         } catch (error) {
             console.error('Error fetching candidates:', error)
+        } finally {
+            setLoading(false)
+            setLoadingMore(false)
         }
     }
 
-    function applyFilters() {
-        let result = [...candidates]
-
-        if (searchTerm) {
-            result = result.filter(c =>
-                c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                c.region?.toLowerCase().includes(searchTerm.toLowerCase())
-            )
-        }
-
-        if (filterCategory !== 'all') {
-            result = result.filter(c => c.category === filterCategory)
-        }
-
-        if (filterSeniority !== 'all') {
-            result = result.filter(c => c.seniority === filterSeniority)
-        }
-
-        if (filterStatus !== 'all') {
-            result = result.filter(c => c.status === filterStatus)
-        }
-
-        if (filterJobId !== 'all') {
-            if (filterJobId === 'direct') {
-                result = result.filter(c => !c.job_id)
-            } else {
-                result = result.filter(c => c.job_id === filterJobId)
-            }
-        }
-
-        setFilteredCandidates(result)
-    }
 
     async function updateStatus(id: string, newStatus: string) {
         try {
@@ -153,7 +202,7 @@ export default function AdminCandidatosPage() {
             console.error('Error updating status:', error)
             toast.error("Erro ao atualizar status.")
             // Revert optimistic update if needed, fetching again
-            fetchCandidates()
+            fetchCandidates(true)
         } finally {
             setStatusLoading(null)
         }
@@ -196,13 +245,21 @@ export default function AdminCandidatosPage() {
     async function handleDownloadResume(path: string) {
         const promise = new Promise(async (resolve, reject) => {
             try {
-                const { data, error } = await supabase.storage
-                    .from('resumes')
-                    .createSignedUrl(path, 60)
+                // Check if this is a Firebase Storage URL (from migrated candidates)
+                if (path.startsWith('http://') || path.startsWith('https://')) {
+                    // Direct Firebase URL - open it directly
+                    window.open(path, '_blank')
+                    resolve(true)
+                } else {
+                    // Supabase storage path - generate signed URL
+                    const { data, error } = await supabase.storage
+                        .from('resumes')
+                        .createSignedUrl(path, 60)
 
-                if (error) throw error
-                window.open(data.signedUrl, '_blank')
-                resolve(true)
+                    if (error) throw error
+                    window.open(data.signedUrl, '_blank')
+                    resolve(true)
+                }
             } catch (error) {
                 console.error('Error getting resume link:', error)
                 reject(error)
@@ -259,6 +316,9 @@ export default function AdminCandidatosPage() {
                     <div>
                         <h1 className="text-3xl font-heading font-black tracking-tight text-foreground">Banco de Talentos</h1>
                         <p className="text-muted-foreground font-medium">Gestão profissional e filtragem de candidatos.</p>
+                        <p className="text-sm text-gray-500 mt-1 font-semibold">
+                            Total: <span className="text-primary">{totalCount}</span> candidatos
+                        </p>
                         <p className="text-[10px] text-gray-400 mt-2 italic flex items-center gap-1.5">
                             <span className="h-1.5 w-1.5 rounded-full bg-primary/30" />
                             <strong>O que é o Banco Geral?</strong> Candidatos que enviaram currículo espontaneamente para o pool de talentos, sem selecionar uma vaga ativa.
@@ -392,9 +452,23 @@ export default function AdminCandidatosPage() {
                                                     </span>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <div className="flex flex-col">
-                                                        <span className="text-sm font-bold text-gray-600">{candidate.region || 'Não inf.'}</span>
-                                                        <span className="text-[10px] font-medium text-gray-400 uppercase tracking-tighter">
+                                                    <div className="flex flex-col max-w-[200px]">
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <span className="text-sm font-bold text-gray-600 truncate cursor-help">{candidate.region || 'Não inf.'}</span>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent className="max-w-xs">
+                                                                <p className="font-semibold">Local:</p>
+                                                                <p>{candidate.region || 'Não informado'}</p>
+                                                                {candidate.experience && (
+                                                                    <>
+                                                                        <p className="font-semibold mt-2">Experiência:</p>
+                                                                        <p className="text-xs">{candidate.experience}</p>
+                                                                    </>
+                                                                )}
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                        <span className="text-[10px] font-medium text-gray-400 uppercase tracking-tighter truncate">
                                                             {candidate.jobs?.title || 'Banco Geral'}
                                                         </span>
                                                     </div>
@@ -448,6 +522,25 @@ export default function AdminCandidatosPage() {
                                                 </TableCell>
                                                 <TableCell className="text-right px-8">
                                                     <div className="flex justify-end gap-2">
+                                                        {/* View Details Button */}
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-9 w-9 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-colors"
+                                                                    onClick={() => {
+                                                                        setSelectedCandidate(candidate)
+                                                                        setDetailsModalOpen(true)
+                                                                    }}
+                                                                >
+                                                                    <Eye className="h-4 w-4" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>Ver Detalhes</TooltipContent>
+                                                        </Tooltip>
+
+                                                        {/* Delete Button */}
                                                         <AlertDialog>
                                                             <Tooltip>
                                                                 <TooltipTrigger asChild>
@@ -490,8 +583,163 @@ export default function AdminCandidatosPage() {
                                 </TableBody>
                             </Table>
                         </div>
+                        {!loading && hasMore && (
+                            <div className="p-6 border-t border-gray-100 flex justify-center">
+                                <Button
+                                    onClick={() => fetchCandidates(false)}
+                                    disabled={loadingMore}
+                                    variant="outline"
+                                    size="lg"
+                                    className="rounded-2xl border-2 shadow-sm bg-white hover:bg-gray-50 font-bold"
+                                >
+                                    {loadingMore ? (
+                                        <>
+                                            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                                            Carregando...
+                                        </>
+                                    ) : (
+                                        `Carregar Mais (${filteredCandidates.length} de ${totalCount})`
+                                    )}
+                                </Button>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
+
+                {/* Candidate Details Modal */}
+                <Dialog open={detailsModalOpen} onOpenChange={setDetailsModalOpen}>
+                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                            <DialogTitle className="text-2xl font-heading font-black text-primary">
+                                Detalhes do Candidato
+                            </DialogTitle>
+                            <DialogDescription>
+                                Informações completas sobre o candidato selecionado
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        {selectedCandidate && (
+                            <div className="space-y-6 py-4">
+                                {/* Personal Information */}
+                                <div className="space-y-3">
+                                    <h3 className="font-bold text-lg text-gray-900 border-b pb-2">Informações Pessoais</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Nome</p>
+                                            <p className="text-sm font-bold text-gray-900">{selectedCandidate.name}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</p>
+                                            <p className="text-sm text-gray-700">{selectedCandidate.email}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Telefone</p>
+                                            <p className="text-sm text-gray-700">{selectedCandidate.phone}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Região/Estado</p>
+                                            <p className="text-sm text-gray-700">{selectedCandidate.region || 'Não informado'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Professional Information */}
+                                <div className="space-y-3">
+                                    <h3 className="font-bold text-lg text-gray-900 border-b pb-2">Informações Profissionais</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Área Profissional</p>
+                                            <Badge variant="outline" className="mt-1 text-xs font-bold border-primary/30 bg-primary/5 text-primary">
+                                                {selectedCandidate.category || 'Não informado'}
+                                            </Badge>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Senioridade</p>
+                                            <Badge variant="outline" className="mt-1 text-xs font-bold border-secondary/30 bg-secondary/5 text-secondary">
+                                                {selectedCandidate.seniority || 'Não informado'}
+                                            </Badge>
+                                        </div>
+                                        <div className="col-span-2">
+                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Vaga de Interesse</p>
+                                            <p className="text-sm text-gray-700">{selectedCandidate.jobs?.title || 'Banco Geral'}</p>
+                                        </div>
+                                        <div className="col-span-2">
+                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</p>
+                                            <Badge className={`mt-1 text-xs font-bold ${selectedCandidate.status === 'Contratado' ? 'bg-green-100 text-green-700 border-green-200' :
+                                                selectedCandidate.status === 'Entrevista' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                                                    selectedCandidate.status === 'Em Análise' ? 'bg-orange-100 text-orange-700 border-orange-200' :
+                                                        'bg-gray-100 text-gray-700 border-gray-200'
+                                                }`}>
+                                                {selectedCandidate.status || 'Novo'}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Experience/Skills */}
+                                {selectedCandidate.experience && (
+                                    <div className="space-y-3">
+                                        <h3 className="font-bold text-lg text-gray-900 border-b pb-2">
+                                            {Array.isArray(selectedCandidate.experience) ? 'Habilidades e Experiências' : 'Experiência Profissional'}
+                                        </h3>
+                                        {Array.isArray(selectedCandidate.experience) ? (
+                                            <div className="flex flex-wrap gap-2">
+                                                {selectedCandidate.experience.map((skill: string, index: number) => (
+                                                    <Badge
+                                                        key={index}
+                                                        variant="secondary"
+                                                        className="px-3 py-1.5 text-sm font-medium bg-primary/10 text-primary border-primary/20"
+                                                    >
+                                                        {skill}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="bg-gray-50 p-4 rounded-xl">
+                                                <p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedCandidate.experience}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Resume */}
+                                <div className="space-y-3">
+                                    <h3 className="font-bold text-lg text-gray-900 border-b pb-2">Currículo</h3>
+                                    {selectedCandidate.resume_url ? (
+                                        <Button
+                                            onClick={() => handleDownloadResume(selectedCandidate.resume_url)}
+                                            variant="outline"
+                                            className="w-full rounded-xl border-2 hover:bg-primary hover:text-white hover:border-primary transition-all"
+                                        >
+                                            <FileText className="h-4 w-4 mr-2" />
+                                            Abrir Currículo
+                                        </Button>
+                                    ) : (
+                                        <p className="text-sm text-gray-400 italic">Nenhum currículo anexado</p>
+                                    )}
+                                </div>
+
+                                {/* Metadata */}
+                                <div className="space-y-3 pt-4 border-t">
+                                    <div className="grid grid-cols-2 gap-4 text-xs text-gray-500">
+                                        <div>
+                                            <p className="font-semibold uppercase tracking-wider">Data de Cadastro</p>
+                                            <p>{new Date(selectedCandidate.created_at).toLocaleDateString('pt-BR', {
+                                                day: '2-digit',
+                                                month: 'long',
+                                                year: 'numeric'
+                                            })}</p>
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold uppercase tracking-wider">ID do Candidato</p>
+                                            <p className="font-mono text-[10px]">{selectedCandidate.id}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </DialogContent>
+                </Dialog>
             </div>
         </TooltipProvider>
     )

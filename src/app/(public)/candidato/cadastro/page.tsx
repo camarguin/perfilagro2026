@@ -24,6 +24,26 @@ import { Upload, User, Mail, Phone, MapPin, Briefcase, FileText, CheckCircle2, L
 import { supabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from "framer-motion"
 import Link from 'next/link'
+import { TagInput } from "@/components/ui/tag-input"
+
+// Predefined skills from old website
+const SKILLS_SUGGESTIONS = [
+    // Culturas
+    "Soja", "Milho", "Algodão", "Hortifrúti - HF", "Café", "Sorgo", "Trigo",
+    "Cana de açúcar", "Arroz", "Feijão", "Batata", "Fumo",
+    // Atividades Profissionais
+    "Assistência técnica", "AGD - Agrônomo gerador de demanda",
+    "MIP - Monitoramento de pragas e doenças", "TS - Tratamento de sementes",
+    "Barter - Monitoramento e acompanhamento de safra", "Coleta de solo",
+    "Mapeamento de levantamento das áreas de cultivo", "Pesquisa de campo",
+    "Monitoramento e certificações", "Montagem de estação meteorológica",
+    "Medição de áreas por GPS", "Out card", "Operar drones ou vants",
+    "Perícia em seguro agrícola - Lavoura", "Perícia em seguro máquinas",
+    "Perícia em unidade armazenadora", "Contact Center",
+    // Funções
+    "Gerência", "Coordenação", "Supervisor", "Líder de campo",
+    "Assistente técnico", "Estágio"
+]
 
 const formSchema = z.object({
     name: z.string().min(3, 'Nome muito curto'),
@@ -32,7 +52,7 @@ const formSchema = z.object({
     region: z.string().min(2, 'Região/Estado obrigatório'),
     category: z.string().min(1, 'Selecione uma área profissional'),
     seniority: z.string().min(1, 'Selecione sua senioridade'),
-    experience: z.string().optional(),
+    experience: z.array(z.string()),
     privacyPolicy: z.boolean().refine(val => val === true, { message: 'Você precisa aceitar a política de privacidade' }),
 })
 
@@ -54,7 +74,7 @@ export default function CadastroCandidatoPage() {
             region: '',
             category: '',
             seniority: '',
-            experience: '',
+            experience: [],
             privacyPolicy: false
         },
     })
@@ -80,7 +100,7 @@ export default function CadastroCandidatoPage() {
                         region: data[0].region,
                         category: data[0].category,
                         seniority: data[0].seniority,
-                        experience: data[0].experience || ''
+                        experience: Array.isArray(data[0].experience) ? data[0].experience : (data[0].experience ? [data[0].experience] : [])
                     })
                 }
                 toast.info("Vimos que você já tem um cadastro. Seus dados foram preenchidos!", {
@@ -407,15 +427,18 @@ export default function CadastroCandidatoPage() {
                                             name="experience"
                                             render={({ field }) => (
                                                 <FormItem className="space-y-3">
-                                                    <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Resumo Profissional (Opcional)</FormLabel>
+                                                    <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Habilidades e Experiências (Opcional)</FormLabel>
                                                     <FormControl>
-                                                        <Textarea
-                                                            placeholder="Fale brevemente sobre sua experiência..."
-                                                            className="min-h-[120px] bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-3xl font-medium p-8 leading-relaxed resize-none"
-                                                            {...field}
+                                                        <TagInput
+                                                            value={field.value || []}
+                                                            onChange={field.onChange}
+                                                            suggestions={SKILLS_SUGGESTIONS}
+                                                            placeholder="Busque por culturas ou serviços..."
+                                                            maxTags={5}
+                                                            className="bg-gray-50 p-6 rounded-3xl focus-within:bg-white focus-within:ring-4 focus-within:ring-primary/5 transition-all"
                                                         />
                                                     </FormControl>
-                                                    <FormDescription className="text-[10px] ml-2 font-medium">Isso ajuda o recrutador a te encontrar mais rápido.</FormDescription>
+                                                    <FormDescription className="text-[10px] ml-2 font-medium">Selecione até 15 habilidades que descrevem sua experiência profissional.</FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}

@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS jobs (
   location TEXT NOT NULL,
   type TEXT NOT NULL,
   image_url TEXT,
+  owner_email TEXT,
   status TEXT DEFAULT 'active',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

@@ -23,6 +23,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import Link from 'next/link'
 import { Checkbox } from '@/components/ui/checkbox'
+import { sendJobNotification } from '@/app/actions/send-email'
 
 const formSchema = z.object({
     name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -34,7 +35,7 @@ const formSchema = z.object({
     privacyPolicy: z.boolean().refine(val => val === true, { message: 'Você precisa aceitar a política de privacidade' }),
 })
 
-export function JobApplicationForm({ jobId, jobTitle }: { jobId: string; jobTitle: string }) {
+export function JobApplicationForm({ jobId, jobTitle, ownerEmail }: { jobId: string; jobTitle: string; ownerEmail?: string }) {
     const [resumeFile, setResumeFile] = useState<File | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [success, setSuccess] = useState(false)
@@ -159,6 +160,21 @@ export function JobApplicationForm({ jobId, jobTitle }: { jobId: string; jobTitl
 
             if (insertError) throw insertError
 
+            // Send Notification Email
+            await sendJobNotification(
+                ownerEmail || '',
+                jobTitle,
+                {
+                    name: values.name,
+                    email: values.email,
+                    phone: values.phone,
+                    region: values.region,
+                    category: values.category,
+                    seniority: values.seniority
+                },
+                resumePath || ''
+            )
+
             setSuccess(true)
             setResumeFile(null)
         } catch (error) {
@@ -238,7 +254,7 @@ export function JobApplicationForm({ jobId, jobTitle }: { jobId: string; jobTitl
                                                 <FormItem className="space-y-2">
                                                     <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">Nome Completo</FormLabel>
                                                     <FormControl>
-                                                        <Input placeholder="Seu nome" className="h-12 bg-gray-50 border-none focus:bg-white focus:ring-primary focus:border-primary transition-all rounded-xl font-medium" {...field} />
+                                                        <Input placeholder="Seu nome" className="h-12 bg-gray-50 border-none focus:bg-white focus:ring-primary focus:border-primary transition-all rounded-xl font-medium" {...field} value={field.value ?? ''} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -258,6 +274,7 @@ export function JobApplicationForm({ jobId, jobTitle }: { jobId: string; jobTitl
                                                                 type="email"
                                                                 className="h-12 bg-gray-50 border-none focus:bg-white focus:ring-primary transition-all rounded-xl font-medium"
                                                                 {...field}
+                                                                value={field.value ?? ''}
                                                                 onBlur={(e) => {
                                                                     field.onBlur();
                                                                     checkExistingCandidate(e.target.value);
@@ -276,7 +293,7 @@ export function JobApplicationForm({ jobId, jobTitle }: { jobId: string; jobTitl
                                                     <FormItem className="space-y-2">
                                                         <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">WhatsApp</FormLabel>
                                                         <FormControl>
-                                                            <Input placeholder="(00) 00000-0000" className="h-12 bg-gray-50 border-none focus:bg-white focus:ring-primary transition-all rounded-xl font-medium" {...field} />
+                                                            <Input placeholder="(00) 00000-0000" className="h-12 bg-gray-50 border-none focus:bg-white focus:ring-primary transition-all rounded-xl font-medium" {...field} value={field.value ?? ''} />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>
@@ -292,7 +309,7 @@ export function JobApplicationForm({ jobId, jobTitle }: { jobId: string; jobTitl
                                                     <FormItem className="space-y-2">
                                                         <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">Região / Estado</FormLabel>
                                                         <FormControl>
-                                                            <Input placeholder="Ex: MT, Balsas, Sul..." className="h-12 bg-gray-50 border-none focus:bg-white focus:ring-primary transition-all rounded-xl font-medium" {...field} />
+                                                            <Input placeholder="Ex: MT, Balsas, Sul..." className="h-12 bg-gray-50 border-none focus:bg-white focus:ring-primary transition-all rounded-xl font-medium" {...field} value={field.value ?? ''} />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>

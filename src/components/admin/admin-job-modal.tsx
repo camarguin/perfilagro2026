@@ -41,6 +41,7 @@ const formSchema = z.object({
     description: z.string().optional(),
     category: z.string().min(1, 'Selecione uma área'),
     status: z.enum(['active', 'inactive']),
+    owner_email: z.string().email('Email do responsável inválido').or(z.literal('')),
 })
 
 interface AdminJobModalProps {
@@ -64,6 +65,7 @@ export function AdminJobModal({ isOpen, onClose, job, onSuccess }: AdminJobModal
             description: '',
             category: 'Outros',
             status: 'active',
+            owner_email: '',
         },
     })
 
@@ -76,6 +78,7 @@ export function AdminJobModal({ isOpen, onClose, job, onSuccess }: AdminJobModal
                 description: job.description || '',
                 category: job.category || 'Outros',
                 status: job.status || 'active',
+                owner_email: job.owner_email || '',
             })
             setImagePreview(job.image_url || null)
         } else {
@@ -86,6 +89,7 @@ export function AdminJobModal({ isOpen, onClose, job, onSuccess }: AdminJobModal
                 description: '',
                 category: 'Outros',
                 status: 'active',
+                owner_email: '',
             })
             setImagePreview(null)
         }
@@ -179,7 +183,7 @@ export function AdminJobModal({ isOpen, onClose, job, onSuccess }: AdminJobModal
                                     <FormItem className="col-span-12 lg:col-span-3">
                                         <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Título da Vaga</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Ex: Engenheiro Agrônomo" className="h-12 text-sm bg-gray-50 border-none rounded-xl px-5 focus:ring-2 focus:ring-primary/10 transition-all font-medium" {...field} />
+                                            <Input placeholder="Ex: Engenheiro Agrônomo" className="h-12 text-sm bg-gray-50 border-none rounded-xl px-5 focus:ring-2 focus:ring-primary/10 transition-all font-medium" {...field} value={field.value ?? ''} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -193,7 +197,7 @@ export function AdminJobModal({ isOpen, onClose, job, onSuccess }: AdminJobModal
                                     <FormItem className="col-span-12 lg:col-span-3">
                                         <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Cidade / UF</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Ex: Itapeva/SP" className="h-12 text-sm bg-gray-50 border-none rounded-xl px-5 focus:ring-2 focus:ring-primary/10 transition-all font-medium" {...field} />
+                                            <Input placeholder="Ex: Itapeva/SP" className="h-12 text-sm bg-gray-50 border-none rounded-xl px-5 focus:ring-2 focus:ring-primary/10 transition-all font-medium" {...field} value={field.value ?? ''} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -271,6 +275,20 @@ export function AdminJobModal({ isOpen, onClose, job, onSuccess }: AdminJobModal
                                     </FormItem>
                                 )}
                             />
+
+                            <FormField
+                                control={form.control}
+                                name="owner_email"
+                                render={({ field }) => (
+                                    <FormItem className="col-span-12 lg:col-span-4 mt-4 lg:mt-0">
+                                        <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Email do Responsável (Notificações)</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="email@exemplo.com.br" className="h-12 text-sm bg-gray-50 border-none rounded-xl px-5 focus:ring-2 focus:ring-primary/10 transition-all font-medium" {...field} value={field.value ?? ''} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                         </div>
 
                         {/* Main Interaction Area */}
@@ -323,9 +341,10 @@ export function AdminJobModal({ isOpen, onClose, job, onSuccess }: AdminJobModal
                                         <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Descrição / Requisitos</FormLabel>
                                         <FormControl>
                                             <Textarea
-                                                placeholder="Detalhes opcionais da vaga..."
+                                                placeholder={`### Formação\n- Ex: Técnico Agrícola ou Engenheiro Agrônomo\n\n### Perfil\n- Conhecimento da cultura de Soja e Milho\n- Experiência com GPS\n\n### Requisitos\n- Disponibilidade para viagens\n- CNH B`}
                                                 className="flex-1 min-h-[16rem] text-sm bg-gray-50 border-none rounded-[1.5rem] p-6 resize-none leading-relaxed focus:ring-2 focus:ring-primary/10 transition-all font-medium"
                                                 {...field}
+                                                value={field.value ?? ''}
                                             />
                                         </FormControl>
                                         <FormMessage />

@@ -6,6 +6,8 @@ import { Search, MapPin, Briefcase, Calendar, ChevronRight } from "lucide-react"
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
+export const dynamic = 'force-dynamic'
+
 export default async function Home() {
   const { data: featuredJobs, error } = await supabase
     .from('jobs')
@@ -31,10 +33,11 @@ export default async function Home() {
             A Perfil Agro é especializada em recrutamento e gestão de pessoas para o agronegócio, conectando empresas a profissionais qualificados para vagas de campo e administrativas, com processos ágeis e personalizados.
           </p>
 
-          <div className="mx-auto max-w-3xl flex flex-col md:flex-row gap-3 bg-white/10 p-3 rounded-2xl backdrop-blur-xl shadow-2xl border border-white/20 animate-in zoom-in-95 duration-700 delay-300 fill-mode-both">
+          <form action="/vagas" method="GET" className="mx-auto max-w-3xl flex flex-col md:flex-row gap-3 bg-white/10 p-3 rounded-2xl backdrop-blur-xl shadow-2xl border border-white/20 animate-in zoom-in-95 duration-700 delay-300 fill-mode-both">
             <div className="relative flex-1 group">
               <Search className="absolute left-4 top-3.5 h-5 w-5 text-white/60 group-focus-within:text-white transition-colors" />
               <Input
+                name="q"
                 className="pl-12 h-14 bg-white/10 border-none text-white placeholder:text-white/60 focus-visible:ring-0 text-lg"
                 placeholder="Cargo ou palavra-chave..."
               />
@@ -42,14 +45,15 @@ export default async function Home() {
             <div className="relative flex-1 group">
               <MapPin className="absolute left-4 top-3.5 h-5 w-5 text-white/60 group-focus-within:text-white transition-colors" />
               <Input
+                name="l"
                 className="pl-12 h-14 bg-white/10 border-none text-white placeholder:text-white/60 focus-visible:ring-0 text-lg"
                 placeholder="Cidade ou Estado..."
               />
             </div>
-            <Button variant="cta" size="lg" className="h-14 md:px-10">
+            <Button type="submit" variant="cta" size="lg" className="h-14 md:px-10">
               Buscar Vagas
             </Button>
-          </div>
+          </form>
 
           <div className="mt-12 flex flex-wrap justify-center gap-4 text-sm text-primary-foreground/70">
             <span>Soluções completas:</span>
@@ -135,10 +139,10 @@ export default async function Home() {
         <div className="container mx-auto px-4">
           <div className="text-center max-w-4xl mx-auto mb-16">
             <h2 className="font-heading text-3xl md:text-5xl font-bold text-foreground mb-6">
-              Mais de <span className="text-secondary">5 mil</span> profissionais selecionados
+              Mais de <span className="text-secondary">20 mil</span> profissionais selecionados
             </h2>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              A Perfil Agro já selecionou mais de 5.000 profissionais para o setor do agronegócio,
+              A Perfil Agro já selecionou mais de 20.000 profissionais para o setor do agronegócio,
               atendendo empresas de pequeno, médio e grande porte, incluindo multinacionais líderes do mercado.
             </p>
           </div>

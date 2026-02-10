@@ -11,13 +11,29 @@ import { PageHeader } from "@/components/ui/page-header";
 
 export const dynamic = 'force-dynamic'
 
-export default async function VagasPage() {
-    const { data: jobs, error } = await supabase
+export default async function VagasPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ q?: string; l?: string }>;
+}) {
+    const params = await searchParams;
+    const { q, l } = params;
+
+    let query = supabase
         .from('jobs')
         .select('*')
         .eq('status', 'active')
-        .eq('is_approved', true)
-        .order('created_at', { ascending: false });
+        .eq('is_approved', true);
+
+    if (q) {
+        query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`);
+    }
+
+    if (l) {
+        query = query.ilike('location', `%${l}%`);
+    }
+
+    const { data: jobs, error } = await query.order('created_at', { ascending: false });
 
     return (
         <div className="flex flex-col min-h-screen bg-muted/20">
@@ -87,18 +103,21 @@ export default async function VagasPage() {
                 {/* Main Content */}
                 <div className="flex-1 space-y-10">
                     {/* Search Bar */}
-                    <div className="flex gap-4 bg-white p-4 rounded-[1.5rem] border-none shadow-xl ring-1 ring-black/5 group focus-within:ring-primary/20 transition-all">
+                    <form action="/vagas" method="GET" className="flex gap-4 bg-white p-4 rounded-[1.5rem] border-none shadow-xl ring-1 ring-black/5 group focus-within:ring-primary/20 transition-all">
                         <div className="relative flex-1">
                             <Search className="absolute left-5 top-4 h-6 w-6 text-muted-foreground group-focus-within:text-primary transition-colors" />
                             <Input
+                                name="q"
+                                defaultValue={q}
                                 className="pl-14 h-14 border-none shadow-none focus-visible:ring-0 text-xl placeholder:text-muted-foreground/50 transition-all"
                                 placeholder="Cargo, palavra-chave ou empresa..."
                             />
+                            {l && <input type="hidden" name="l" value={l} />}
                         </div>
-                        <Button variant="cta" className="h-14 px-10 text-lg">
+                        <Button type="submit" variant="cta" className="h-14 px-10 text-lg">
                             Buscar
                         </Button>
-                    </div>
+                    </form>
 
                     {!jobs || jobs.length === 0 ? (
                         <div className="bg-white rounded-[3rem] p-24 text-center shadow-xl border-2 border-dashed border-muted/50">

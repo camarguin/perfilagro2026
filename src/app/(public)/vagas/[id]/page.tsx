@@ -144,7 +144,7 @@ export default async function JobDetailsPage(props: { params: Params }) {
                                 </p>
                             </div>
 
-                            <JobApplicationForm jobId={job.id} jobTitle={job.title} />
+                            <JobApplicationForm jobId={job.id} jobTitle={job.title} ownerEmail={job.owner_email} />
                         </div>
 
                         <div className="bg-[#1A3C34] rounded-[2.5rem] p-8 shadow-xl text-center relative overflow-hidden group">

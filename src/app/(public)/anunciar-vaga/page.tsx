@@ -36,6 +36,7 @@ const formSchema = z.object({
     description: z.string().min(10, 'Descrição deve ter pelo menos 10 caracteres'),
     location: z.string().min(2, 'Localização obrigatória'),
     type: z.string().min(1, 'Selecione um tipo de vaga'),
+    owner_email: z.string().email('Email do responsável inválido').or(z.literal('')),
 })
 
 export default function AnunciarVagaPage() {
@@ -51,6 +52,7 @@ export default function AnunciarVagaPage() {
             description: '',
             location: '',
             type: '',
+            owner_email: '',
         },
     })
 
@@ -91,7 +93,8 @@ export default function AnunciarVagaPage() {
                     location: values.location,
                     type: values.type,
                     image_url: imageUrl,
-                    status: 'active',
+                    owner_email: values.owner_email,
+                    status: 'inactive',
                     is_approved: false // New jobs from public page start unapproved
                 })
 
@@ -205,7 +208,7 @@ export default function AnunciarVagaPage() {
                                 <div className="h-12 w-3 bg-secondary rounded-full shadow-lg shadow-secondary/20 shrink-0" />
                                 <div>
                                     <CardTitle className="text-3xl font-black text-gray-900 tracking-tight leading-none">Nova Oportunidade</CardTitle>
-                                    <CardDescription className="text-base text-gray-400 font-medium mt-2">Sua vaga será publicada instantaneamente.</CardDescription>
+                                    <CardDescription className="text-base text-gray-400 font-medium mt-2">Sua vaga passará por aprovação antes de ser publicada.</CardDescription>
                                 </div>
                             </div>
                         </CardHeader>
@@ -231,7 +234,7 @@ export default function AnunciarVagaPage() {
                                                     <FormItem className="space-y-3">
                                                         <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Título da Vaga</FormLabel>
                                                         <FormControl>
-                                                            <Input placeholder="Ex: Engenheiro Agrônomo Sênior" className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6" {...field} />
+                                                            <Input placeholder="Ex: Engenheiro Agrônomo Sênior" className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6" {...field} value={field.value ?? ''} />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>
@@ -246,7 +249,7 @@ export default function AnunciarVagaPage() {
                                                         <FormItem className="space-y-3">
                                                             <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Localização</FormLabel>
                                                             <FormControl>
-                                                                <Input placeholder="Ex: Itapeva/SP, Guarapuava/PR" className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6" {...field} />
+                                                                <Input placeholder="Ex: Itapeva/SP, Guarapuava/PR" className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6" {...field} value={field.value ?? ''} />
                                                             </FormControl>
                                                             <FormDescription className="text-[10px] text-gray-400 font-medium ml-1 italic">Dica: Você pode listar várias cidades se necessário.</FormDescription>
                                                             <FormMessage />
@@ -272,6 +275,20 @@ export default function AnunciarVagaPage() {
                                                                     <SelectItem value="Temporário" className="rounded-xl py-3 px-4 focus:bg-primary/5">Temporário</SelectItem>
                                                                 </SelectContent>
                                                             </Select>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                <FormField
+                                                    control={form.control}
+                                                    name="owner_email"
+                                                    render={({ field }) => (
+                                                        <FormItem className="space-y-3">
+                                                            <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Email do Responsável (Para Notificações)</FormLabel>
+                                                            <FormControl>
+                                                                <Input placeholder="email@vaga.com.br" className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6" {...field} value={field.value ?? ''} />
+                                                            </FormControl>
+                                                            <FormDescription className="text-[10px] text-gray-400 font-medium ml-1 italic">Este e-mail receberá os currículos dos candidatos desta vaga.</FormDescription>
                                                             <FormMessage />
                                                         </FormItem>
                                                     )}
@@ -305,6 +322,7 @@ export default function AnunciarVagaPage() {
                                                             placeholder={`### Formação\n- Ex: Técnico Agrícola ou Engenheiro Agrônomo\n\n### Perfil\n- Conhecimento da cultura de Soja e Milho\n- Experiência com GPS\n\n### Requisitos\n- Disponibilidade para viagens\n- CNH B`}
                                                             className="min-h-[350px] bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-3xl font-medium p-8 leading-relaxed resize-none font-mono text-sm"
                                                             {...field}
+                                                            value={field.value ?? ''}
                                                         />
                                                     </FormControl>
                                                     <FormDescription className="text-xs text-gray-400 font-medium ml-1">
