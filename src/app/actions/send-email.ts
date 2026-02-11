@@ -26,7 +26,7 @@ export async function sendContactEmail(formData: FormData) {
     try {
         await transporter.sendMail({
             from: `"${name}" <${process.env.SMTP_USER}>`, // sender address
-            to: process.env.CONTACT_EMAIL || 'contato@perfilagro.com.br', // list of receivers
+            to: [process.env.CONTACT_EMAIL, process.env.CONTACT_EMAIL_SECONDARY].filter(Boolean).join(',') || 'contato@perfilagro.com.br', // list of receivers
             replyTo: email,
             subject: `[Contato Site] ${subject}`, // Subject line
             text: `

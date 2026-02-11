@@ -100,7 +100,9 @@ export default function CadastroCandidatoPage() {
                         region: data[0].region,
                         category: data[0].category,
                         seniority: data[0].seniority,
-                        experience: Array.isArray(data[0].experience) ? data[0].experience : (data[0].experience ? [data[0].experience] : [])
+                        experience: (currentValues.experience && currentValues.experience.length > 0)
+                            ? currentValues.experience
+                            : (Array.isArray(data[0].experience) ? data[0].experience : (data[0].experience ? [data[0].experience] : []))
                     })
                 }
                 toast.info("Vimos que você já tem um cadastro. Seus dados foram preenchidos!", {
@@ -438,7 +440,7 @@ export default function CadastroCandidatoPage() {
                                                             className="bg-gray-50 p-6 rounded-3xl focus-within:bg-white focus-within:ring-4 focus-within:ring-primary/5 transition-all"
                                                         />
                                                     </FormControl>
-                                                    <FormDescription className="text-[10px] ml-2 font-medium">Selecione até 15 habilidades que descrevem sua experiência profissional.</FormDescription>
+                                                    <FormDescription className="text-[10px] ml-2 font-medium">Selecione até 5 habilidades que descrevem sua experiência profissional.</FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}

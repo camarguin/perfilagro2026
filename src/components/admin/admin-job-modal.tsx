@@ -342,7 +342,7 @@ export function AdminJobModal({ isOpen, onClose, job, onSuccess }: AdminJobModal
                                         <FormControl>
                                             <Textarea
                                                 placeholder={`### Formação\n- Ex: Técnico Agrícola ou Engenheiro Agrônomo\n\n### Perfil\n- Conhecimento da cultura de Soja e Milho\n- Experiência com GPS\n\n### Requisitos\n- Disponibilidade para viagens\n- CNH B`}
-                                                className="flex-1 min-h-[16rem] text-sm bg-gray-50 border-none rounded-[1.5rem] p-6 resize-none leading-relaxed focus:ring-2 focus:ring-primary/10 transition-all font-medium"
+                                                className="flex-1 min-h-[16rem] max-h-[250px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent text-sm bg-gray-50 border-none rounded-[1.5rem] p-6 resize-none leading-relaxed focus:ring-2 focus:ring-primary/10 transition-all font-medium"
                                                 {...field}
                                                 value={field.value ?? ''}
                                             />

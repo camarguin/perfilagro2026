@@ -141,7 +141,10 @@ export function TagInput({
                                     <button
                                         key={suggestion}
                                         type="button"
-                                        onClick={() => addTag(suggestion)}
+                                        onMouseDown={(e) => {
+                                            e.preventDefault()
+                                            addTag(suggestion)
+                                        }}
                                         className={cn(
                                             "w-full text-left px-4 py-3 text-sm font-semibold rounded-xl transition-all mb-1 last:mb-0",
                                             index === selectedIndex
