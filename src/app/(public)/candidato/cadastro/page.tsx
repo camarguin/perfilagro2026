@@ -25,6 +25,7 @@ import { supabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from "framer-motion"
 import Link from 'next/link'
 import { TagInput } from "@/components/ui/tag-input"
+import { maskPhone } from "@/lib/masks"
 
 // Predefined skills from old website
 const SKILLS_SUGGESTIONS = [
@@ -47,8 +48,8 @@ const SKILLS_SUGGESTIONS = [
 
 const formSchema = z.object({
     name: z.string().min(3, 'Nome muito curto'),
-    email: z.string().email('Email inválido'),
-    phone: z.string().min(10, 'Telefone inválido'),
+    email: z.string().email('Email inválido. Ex: seu@email.com').min(5, 'Email muito curto'),
+    phone: z.string().min(14, 'Telefone incompleto'),
     region: z.string().min(2, 'Região/Estado obrigatório'),
     category: z.string().min(1, 'Selecione uma área profissional'),
     seniority: z.string().min(1, 'Selecione sua senioridade'),
@@ -340,7 +341,13 @@ export default function CadastroCandidatoPage() {
                                                     <FormItem className="space-y-3">
                                                         <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Telefone / WhatsApp</FormLabel>
                                                         <FormControl>
-                                                            <Input placeholder="(00) 00000-0000" className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6" {...field} />
+                                                            <Input
+                                                                placeholder="(00) 00000-0000"
+                                                                className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6"
+                                                                {...field}
+                                                                value={field.value ?? ''}
+                                                                onChange={(e) => field.onChange(maskPhone(e.target.value))}
+                                                            />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>

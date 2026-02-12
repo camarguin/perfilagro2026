@@ -8,16 +8,17 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 import { PageHeader } from "@/components/ui/page-header";
+import { JobFilters } from "@/components/JobFilters";
 
 export const dynamic = 'force-dynamic'
 
 export default async function VagasPage({
     searchParams,
 }: {
-    searchParams: Promise<{ q?: string; l?: string }>;
+    searchParams: Promise<{ q?: string; l?: string; t?: string }>;
 }) {
     const params = await searchParams;
-    const { q, l } = params;
+    const { q, l, t } = params;
 
     let query = supabase
         .from('jobs')
@@ -31,6 +32,10 @@ export default async function VagasPage({
 
     if (l) {
         query = query.ilike('location', `%${l}%`);
+    }
+
+    if (t) {
+        query = query.eq('type', t);
     }
 
     const { data: jobs, error } = await query.order('created_at', { ascending: false });
@@ -55,41 +60,7 @@ export default async function VagasPage({
                             Filtros
                         </h3>
 
-                        <div className="space-y-8">
-                            <div className="space-y-3">
-                                <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">Localização</label>
-                                <Select>
-                                    <SelectTrigger className="bg-muted/50 border-none h-12 text-base font-medium">
-                                        <SelectValue placeholder="Todos os estados" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="mt">Mato Grosso</SelectItem>
-                                        <SelectItem value="go">Goiás</SelectItem>
-                                        <SelectItem value="pr">Paraná</SelectItem>
-                                        <SelectItem value="mg">Minas Gerais</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-3">
-                                <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">Tipo de Contrato</label>
-                                <Select>
-                                    <SelectTrigger className="bg-muted/50 border-none h-12 text-base font-medium">
-                                        <SelectValue placeholder="Todos os tipos" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="CLT">CLT</SelectItem>
-                                        <SelectItem value="PJ">PJ</SelectItem>
-                                        <SelectItem value="Estágio">Estágio</SelectItem>
-                                        <SelectItem value="Temporário">Temporário</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <Button variant="cta-primary" className="w-full h-14 text-lg">
-                                Aplicar Filtros
-                            </Button>
-                        </div>
+                        <JobFilters />
                     </Card>
 
                     <div className="bg-secondary/10 p-8 rounded-[2rem] border border-secondary/20">

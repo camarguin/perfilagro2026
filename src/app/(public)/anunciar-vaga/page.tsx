@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from "sonner"
+import { maskPhone } from "@/lib/masks"
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
 import {
@@ -36,7 +38,8 @@ const formSchema = z.object({
     description: z.string().min(10, 'Descrição deve ter pelo menos 10 caracteres'),
     location: z.string().min(2, 'Localização obrigatória'),
     type: z.string().min(1, 'Selecione um tipo de vaga'),
-    owner_email: z.string().email('Email do responsável inválido').or(z.literal('')),
+    owner_email: z.string().email('Email inválido. Ex: seu@email.com').min(5, 'Email muito curto'),
+    phone: z.string().min(14, 'Telefone incompleto'),
 })
 
 export default function AnunciarVagaPage() {
@@ -53,6 +56,7 @@ export default function AnunciarVagaPage() {
             location: '',
             type: '',
             owner_email: '',
+            phone: '',
         },
     })
 
@@ -94,6 +98,7 @@ export default function AnunciarVagaPage() {
                     type: values.type,
                     image_url: imageUrl,
                     owner_email: values.owner_email,
+                    phone: values.phone,
                     status: 'inactive',
                     is_approved: false // New jobs from public page start unapproved
                 })
@@ -289,6 +294,26 @@ export default function AnunciarVagaPage() {
                                                                 <Input placeholder="email@vaga.com.br" className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6" {...field} value={field.value ?? ''} />
                                                             </FormControl>
                                                             <FormDescription className="text-[10px] text-gray-400 font-medium ml-1 italic">Este e-mail receberá os currículos dos candidatos desta vaga.</FormDescription>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                <FormField
+                                                    control={form.control}
+                                                    name="phone"
+                                                    render={({ field }) => (
+                                                        <FormItem className="space-y-3">
+                                                            <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">WhatsApp para Contato</FormLabel>
+                                                            <FormControl>
+                                                                <Input
+                                                                    placeholder="(00) 00000-0000"
+                                                                    className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6"
+                                                                    {...field}
+                                                                    value={field.value ?? ''}
+                                                                    onChange={(e) => field.onChange(maskPhone(e.target.value))}
+                                                                />
+                                                            </FormControl>
+                                                            <FormDescription className="text-[10px] text-gray-400 font-medium ml-1 italic">Número para contato direto (WhatsApp).</FormDescription>
                                                             <FormMessage />
                                                         </FormItem>
                                                     )}

@@ -5,6 +5,7 @@ import nodemailer from 'nodemailer'
 export async function sendContactEmail(formData: FormData) {
     const name = formData.get('name') as string
     const email = formData.get('email') as string
+    const phone = formData.get('phone') as string
     const subject = formData.get('subject') as string
     const message = formData.get('message') as string
 
@@ -25,27 +26,33 @@ export async function sendContactEmail(formData: FormData) {
 
     try {
         await transporter.sendMail({
-            from: `"${name}" <${process.env.SMTP_USER}>`, // sender address
-            to: [process.env.CONTACT_EMAIL, process.env.CONTACT_EMAIL_SECONDARY].filter(Boolean).join(',') || 'contato@perfilagro.com.br', // list of receivers
+            from: `"Site Perfil Agro" <${process.env.SMTP_USER}>`,
+            to: 'contato@perfilagro.com.br',
             replyTo: email,
-            subject: `[Contato Site] ${subject}`, // Subject line
+            subject: `[Contato Site] ${subject}`,
             text: `
 Nome: ${name}
 Email: ${email}
+WhatsApp: ${phone}
 Assunto: ${subject}
 
 Mensagem:
 ${message}
-            `, // plain text body
+            `,
             html: `
-<h3>Nova mensagem de contato do site</h3>
-<p><strong>Nome:</strong> ${name}</p>
-<p><strong>Email:</strong> ${email}</p>
-<p><strong>Assunto:</strong> ${subject}</p>
-<br/>
-<p><strong>Mensagem:</strong></p>
-<p>${message.replace(/\n/g, '<br>')}</p>
-            `, // html body
+<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+    <h2 style="color: #1A3C34; border-bottom: 2px solid #1A3C34; padding-bottom: 10px;">Nova Mensagem de Contato</h2>
+    <p><strong>Nome:</strong> ${name}</p>
+    <p><strong>Email:</strong> ${email}</p>
+    <p><strong>WhatsApp:</strong> ${phone}</p>
+    <p><strong>Assunto:</strong> ${subject}</p>
+    <br/>
+    <p><strong>Mensagem:</strong></p>
+    <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px;">
+        ${message.replace(/\n/g, '<br>')}
+    </div>
+</div>
+            `,
         });
 
         return { success: true }

@@ -7,7 +7,7 @@ import { Menu, Sprout } from "lucide-react";
 export function Header() {
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container mx-auto px-4 flex h-16 items-center justify-between">
+            <div className="container mx-auto px-6 md:px-4 flex h-20 md:h-16 items-center justify-between">
                 <div className="flex items-center">
                     <Link href="/" className="flex items-center">
                         <div className="relative h-12 w-48 overflow-hidden">
@@ -76,7 +76,7 @@ export function Header() {
                     </SheetTrigger>
                     <SheetContent side="right">
                         <SheetTitle className="sr-only">Menu de Navegação</SheetTitle>
-                        <nav className="flex flex-col gap-4 mt-8">
+                        <nav className="flex flex-col gap-4 mt-8 px-6">
                             <Link
                                 href="/vagas"
                                 className="text-lg font-medium hover:text-primary"

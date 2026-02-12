@@ -33,6 +33,7 @@ import { supabase } from "@/lib/supabase"
 import { Loader2, Upload, X, Image as ImageIcon } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
+import { maskPhone } from "@/lib/masks"
 
 const formSchema = z.object({
     title: z.string().min(2, 'Título deve ter pelo menos 2 caracteres'),
@@ -41,7 +42,8 @@ const formSchema = z.object({
     description: z.string().optional(),
     category: z.string().min(1, 'Selecione uma área'),
     status: z.enum(['active', 'inactive']),
-    owner_email: z.string().email('Email do responsável inválido').or(z.literal('')),
+    owner_email: z.string().email('Email inválido. Ex: seu@email.com').min(5, 'Email muito curto').or(z.literal('')),
+    phone: z.string().min(14, 'Telefone incompleto').optional().or(z.literal('')),
 })
 
 interface AdminJobModalProps {
@@ -66,6 +68,7 @@ export function AdminJobModal({ isOpen, onClose, job, onSuccess }: AdminJobModal
             category: 'Outros',
             status: 'active',
             owner_email: '',
+            phone: '',
         },
     })
 
@@ -79,6 +82,7 @@ export function AdminJobModal({ isOpen, onClose, job, onSuccess }: AdminJobModal
                 category: job.category || 'Outros',
                 status: job.status || 'active',
                 owner_email: job.owner_email || '',
+                phone: job.phone || '',
             })
             setImagePreview(job.image_url || null)
         } else {
@@ -90,6 +94,7 @@ export function AdminJobModal({ isOpen, onClose, job, onSuccess }: AdminJobModal
                 category: 'Outros',
                 status: 'active',
                 owner_email: '',
+                phone: '',
             })
             setImagePreview(null)
         }
@@ -284,6 +289,26 @@ export function AdminJobModal({ isOpen, onClose, job, onSuccess }: AdminJobModal
                                         <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Email do Responsável (Notificações)</FormLabel>
                                         <FormControl>
                                             <Input placeholder="email@exemplo.com.br" className="h-12 text-sm bg-gray-50 border-none rounded-xl px-5 focus:ring-2 focus:ring-primary/10 transition-all font-medium" {...field} value={field.value ?? ''} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="phone"
+                                render={({ field }) => (
+                                    <FormItem className="col-span-12 lg:col-span-4 mt-4 lg:mt-0">
+                                        <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-gray-400">WhatsApp para Contato</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                placeholder="(00) 00000-0000"
+                                                className="h-12 text-sm bg-gray-50 border-none rounded-xl px-5 focus:ring-2 focus:ring-primary/10 transition-all font-medium"
+                                                {...field}
+                                                value={field.value ?? ''}
+                                                onChange={(e) => field.onChange(maskPhone(e.target.value))}
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

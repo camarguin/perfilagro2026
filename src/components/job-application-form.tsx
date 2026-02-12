@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { Loader2, CheckCircle2, XIcon } from 'lucide-react'
 import { toast } from 'sonner'
+import { maskPhone } from "@/lib/masks"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -26,9 +27,10 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { sendJobNotification } from '@/app/actions/send-email'
 
 const formSchema = z.object({
-    name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
-    email: z.string().email('Email inválido'),
-    phone: z.string().min(10, 'Telefone inválido'),
+    name: z.string().min(3, 'Nome muito curto'),
+    email: z.string().email('Email inválido. Ex: seu@email.com').min(5, 'Email muito curto'),
+    phone: z.string().min(14, 'Telefone incompleto'),
+    motivation: z.string().optional(),
     region: z.string().min(2, 'Região é obrigatória'),
     category: z.string().min(1, 'Área é obrigatória'),
     seniority: z.string().min(1, 'Senioridade é obrigatória'),
@@ -293,7 +295,13 @@ export function JobApplicationForm({ jobId, jobTitle, ownerEmail }: { jobId: str
                                                     <FormItem className="space-y-2">
                                                         <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">WhatsApp</FormLabel>
                                                         <FormControl>
-                                                            <Input placeholder="(00) 00000-0000" className="h-12 bg-gray-50 border-none focus:bg-white focus:ring-primary transition-all rounded-xl font-medium" {...field} value={field.value ?? ''} />
+                                                            <Input
+                                                                placeholder="(00) 00000-0000"
+                                                                className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6"
+                                                                {...field}
+                                                                value={field.value ?? ''}
+                                                                onChange={(e) => field.onChange(maskPhone(e.target.value))}
+                                                            />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>

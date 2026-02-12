@@ -3,7 +3,7 @@ import { JobApplicationForm } from '@/components/job-application-form'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
-import { MapPin, Briefcase, Calendar, FileText } from 'lucide-react'
+import { MapPin, Briefcase, Calendar, FileText, MessageCircle } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Metadata } from 'next'
@@ -90,6 +90,16 @@ export default async function JobDetailsPage(props: { params: Params }) {
                             </div>
                             Publicado em {new Date(job.created_at).toLocaleDateString('pt-BR')}
                         </div>
+                        {job.phone && (
+                            <div className="flex items-center gap-2.5">
+                                <div className="p-2 rounded-full bg-white/10 text-secondary">
+                                    <MessageCircle className="w-4 h-4" />
+                                </div>
+                                <a href={`https://wa.me/${job.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="hover:text-secondary transition-colors underline decoration-secondary/30 underline-offset-4">
+                                    {job.phone}
+                                </a>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -158,7 +168,7 @@ export default async function JobDetailsPage(props: { params: Params }) {
 
                 </div>
             </div>
-        </div>
+        </div >
     )
 
 }

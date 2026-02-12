@@ -22,13 +22,15 @@ import { PageHeader } from "@/components/ui/page-header"
 
 const formSchema = z.object({
     name: z.string().min(3, 'Nome muito curto'),
-    email: z.string().email('Email inválido'),
+    email: z.string().email('Email inválido. Ex: seu@email.com').min(5, 'Email muito curto'),
+    phone: z.string().min(14, 'Telefone incompleto'),
     subject: z.string().min(5, 'Assunto muito curto'),
     message: z.string().min(10, 'Mensagem muito curta'),
 })
 
 import { toast } from "sonner"
 import { sendContactEmail } from "@/app/actions/send-email"
+import { maskPhone } from "@/lib/masks"
 
 export default function ContatoPage() {
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -39,6 +41,7 @@ export default function ContatoPage() {
         defaultValues: {
             name: '',
             email: '',
+            phone: '',
             subject: '',
             message: '',
         },
@@ -51,6 +54,7 @@ export default function ContatoPage() {
             const formData = new FormData()
             formData.append('name', values.name)
             formData.append('email', values.email)
+            formData.append('phone', values.phone)
             formData.append('subject', values.subject)
             formData.append('message', values.message)
 
@@ -210,6 +214,25 @@ export default function ContatoPage() {
                                                         <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">E-mail</FormLabel>
                                                         <FormControl>
                                                             <Input placeholder="seu@email.com" className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6" {...field} />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="phone"
+                                                render={({ field }) => (
+                                                    <FormItem className="space-y-3">
+                                                        <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">WhatsApp</FormLabel>
+                                                        <FormControl>
+                                                            <Input
+                                                                placeholder="(00) 00000-0000"
+                                                                className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6"
+                                                                {...field}
+                                                                value={field.value ?? ''}
+                                                                onChange={(e) => field.onChange(maskPhone(e.target.value))}
+                                                            />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>

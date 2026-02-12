@@ -130,8 +130,10 @@ export default function AdminCandidatosPage() {
             // Apply filters
             if (searchTerm) {
                 // Search in name, email, region, and experience
-                // Handles both old string format (ilike) and new JSON array format (cs)
-                query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,region.ilike.%${searchTerm}%,experience.ilike.%${searchTerm}%,experience.cs.{${searchTerm}}`)
+                // FIX: Confirmed experience is a TEXT column, so we use ilike.
+                // We quote the search term to handle special characters like commas in the OR string.
+                const safeSearchTerm = searchTerm.replace(/"/g, '\\"')
+                query = query.or(`name.ilike."%${safeSearchTerm}%",email.ilike."%${safeSearchTerm}%",region.ilike."%${safeSearchTerm}%",experience.ilike."%${safeSearchTerm}%"`)
             }
 
             if (filterCategory !== 'all') {
@@ -233,6 +235,7 @@ export default function AdminCandidatosPage() {
             }
 
             setCandidates(prev => prev.filter(c => c.id !== id))
+            setFilteredCandidates(prev => prev.filter(c => c.id !== id))
             toast.success("Candidato excluído permanentemente.")
         } catch (error) {
             console.error('Error deleting:', error)
@@ -275,7 +278,7 @@ export default function AdminCandidatosPage() {
 
     function handleExport() {
         const headers = ["Nome", "Email", "Telefone", "Cidade/Estado", "Vaga de Interesse", "Nível", "Área", "Status", "Data Cadastro"]
-        const csvContent = [
+        const csvContent = "\ufeff" + [
             headers.join(","),
             ...filteredCandidates.map(c => [
                 `"${c.name}"`,
@@ -432,7 +435,7 @@ export default function AdminCandidatosPage() {
                                             </TableCell>
                                         </TableRow>
                                     ) : filteredCandidates.map((candidate) => {
-                                        const isNew = (new Date().getTime() - new Date(candidate.created_at).getTime()) < 7 * 24 * 60 * 60 * 1000;
+                                        const isNew = new Date(candidate.created_at).toDateString() === new Date().toDateString();
                                         return (
                                             <TableRow key={candidate.id} className="hover:bg-gray-50/50 transition-all border-gray-100 group">
                                                 <TableCell className="px-8 py-5">

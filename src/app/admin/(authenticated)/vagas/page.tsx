@@ -110,7 +110,10 @@ export default function AdminVagasPage() {
         try {
             setActionLoading(id)
 
-            // 1. Fetch all candidates for this job to get their resume paths
+            // 1. Get Job Image URL to delete later
+            const jobToDelete = jobs.find(j => j.id === id)
+
+            // 2. Fetch all candidates for this job to get their resume paths
             const { data: candidates, error: fetchError } = await supabase
                 .from('candidates')
                 .select('resume_url')
@@ -118,7 +121,7 @@ export default function AdminVagasPage() {
 
             if (fetchError) throw fetchError
 
-            // 2. Delete all related resumes from storage
+            // 3. Delete all related resumes from storage
             if (candidates && candidates.length > 0) {
                 const resumePaths = candidates
                     .map(c => c.resume_url)
@@ -131,12 +134,12 @@ export default function AdminVagasPage() {
 
                     if (storageError) {
                         console.error('Error deleting resumes from storage:', storageError)
-                        // Continue anyway to delete the job
+                        // Continue anyway
                     }
                 }
             }
 
-            // 3. Delete candidates from DB
+            // 4. Delete candidates from DB
             const { error: candError } = await supabase
                 .from('candidates')
                 .delete()
@@ -144,7 +147,26 @@ export default function AdminVagasPage() {
 
             if (candError) throw candError
 
-            // 4. Delete the job itself
+            // 5. Delete job image if exists
+            if (jobToDelete?.image_url) {
+                try {
+                    // Extract filename from public URL
+                    // URL format: .../storage/v1/object/public/job-images/filename.ext
+                    const urlParts = jobToDelete.image_url.split('/job-images/')
+                    if (urlParts.length > 1) {
+                        const imagePath = urlParts[1]
+                        const { error: imgError } = await supabase.storage
+                            .from('job-images')
+                            .remove([imagePath])
+
+                        if (imgError) console.error('Error deleting job image:', imgError)
+                    }
+                } catch (e) {
+                    console.error('Error parsing image URL:', e)
+                }
+            }
+
+            // 6. Delete the job itself
             const { error } = await supabase
                 .from('jobs')
                 .delete()
@@ -153,7 +175,8 @@ export default function AdminVagasPage() {
             if (error) throw error
 
             setJobs(prev => prev.filter(j => j.id !== id))
-            toast.success("Vaga e candidatos relacionados excluídos com sucesso.")
+            setFilteredJobs(prev => prev.filter(j => j.id !== id))
+            toast.success("Vaga, imagem e candidatos relacionados excluídos com sucesso.")
         } catch (error) {
             console.error('Error deleting job:', error)
             toast.error("Erro ao excluir vaga.")
