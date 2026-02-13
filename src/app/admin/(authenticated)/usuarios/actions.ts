@@ -12,7 +12,7 @@ export async function inviteAdmin(email: string) {
         // 1. Invite the user via Supabase Auth Admin API
         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
         const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-            redirectTo: `${siteUrl}/auth/callback?next=/admin/definir-senha`,
+            redirectTo: `${siteUrl}/auth/confirm?next=/admin/definir-senha`,
         })
 
         if (inviteError) {
@@ -41,5 +41,24 @@ export async function inviteAdmin(email: string) {
     } catch (error: any) {
         console.error("Error in inviteAdmin:", error)
         return { error: error.message || "Erro ao convidar administrador" }
+    }
+}
+
+export async function resetPassword(userId: string, newPassword: string) {
+    if (!userId || !newPassword) {
+        return { error: "ID do usuário e nova senha são obrigatórios" }
+    }
+
+    try {
+        const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+            password: newPassword
+        })
+
+        if (error) throw error
+
+        return { success: true }
+    } catch (error: any) {
+        console.error("Error in resetPassword:", error)
+        return { error: error.message || "Erro ao atualizar senha" }
     }
 }
