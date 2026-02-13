@@ -33,12 +33,13 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 
-title: z.string().min(2, 'Título é obrigatório'),
+const formSchema = z.object({
+    title: z.string().min(2, 'Título é obrigatório'),
     description: z.string().min(10, 'Descrição é obrigatória'),
-        location: z.string().min(2, 'Localização é obrigatória'),
-            type: z.string().min(1, 'Selecione um tipo de vaga'),
-                owner_email: z.string().email('Email inválido. Ex: seu@email.com').min(5, 'Email é obrigatório'),
-                    phone: z.string().min(14, 'Telefone é obrigatório'),
+    location: z.string().min(2, 'Localização é obrigatória'),
+    type: z.string().min(1, 'Selecione um tipo de vaga'),
+    owner_email: z.string().email('Email inválido. Ex: seu@email.com').min(5, 'Email é obrigatório'),
+    phone: z.string().min(14, 'Telefone é obrigatório'),
 })
 
 export default function AnunciarVagaPage() {
