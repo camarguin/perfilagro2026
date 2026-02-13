@@ -12,7 +12,7 @@ export async function inviteAdmin(email: string) {
         // 1. Invite the user via Supabase Auth Admin API
         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
         const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-            redirectTo: `${siteUrl}/admin/definir-senha`,
+            redirectTo: `${siteUrl}/auth/callback?next=/admin/definir-senha`,
         })
 
         if (inviteError) {

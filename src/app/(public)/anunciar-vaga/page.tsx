@@ -33,13 +33,12 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 
-const formSchema = z.object({
-    title: z.string().min(2, 'Título deve ter pelo menos 2 caracteres'),
-    description: z.string().min(10, 'Descrição deve ter pelo menos 10 caracteres'),
-    location: z.string().min(2, 'Localização obrigatória'),
-    type: z.string().min(1, 'Selecione um tipo de vaga'),
-    owner_email: z.string().email('Email inválido. Ex: seu@email.com').min(5, 'Email muito curto'),
-    phone: z.string().min(14, 'Telefone incompleto'),
+title: z.string().min(2, 'Título é obrigatório'),
+    description: z.string().min(10, 'Descrição é obrigatória'),
+        location: z.string().min(2, 'Localização é obrigatória'),
+            type: z.string().min(1, 'Selecione um tipo de vaga'),
+                owner_email: z.string().email('Email inválido. Ex: seu@email.com').min(5, 'Email é obrigatório'),
+                    phone: z.string().min(14, 'Telefone é obrigatório'),
 })
 
 export default function AnunciarVagaPage() {
@@ -237,7 +236,7 @@ export default function AnunciarVagaPage() {
                                                 name="title"
                                                 render={({ field }) => (
                                                     <FormItem className="space-y-3">
-                                                        <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Título da Vaga</FormLabel>
+                                                        <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Título da Vaga <span className="text-red-500">*</span></FormLabel>
                                                         <FormControl>
                                                             <Input placeholder="Ex: Engenheiro Agrônomo Sênior" className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6" {...field} value={field.value ?? ''} />
                                                         </FormControl>
@@ -252,7 +251,7 @@ export default function AnunciarVagaPage() {
                                                     name="location"
                                                     render={({ field }) => (
                                                         <FormItem className="space-y-3">
-                                                            <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Localização</FormLabel>
+                                                            <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Localização <span className="text-red-500">*</span></FormLabel>
                                                             <FormControl>
                                                                 <Input placeholder="Ex: Itapeva/SP, Guarapuava/PR" className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6" {...field} value={field.value ?? ''} />
                                                             </FormControl>
@@ -266,7 +265,7 @@ export default function AnunciarVagaPage() {
                                                     name="type"
                                                     render={({ field }) => (
                                                         <FormItem className="space-y-3">
-                                                            <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Modalidade</FormLabel>
+                                                            <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Modalidade <span className="text-red-500">*</span></FormLabel>
                                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                                 <FormControl>
                                                                     <SelectTrigger className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6 shadow-none">
@@ -289,7 +288,7 @@ export default function AnunciarVagaPage() {
                                                     name="owner_email"
                                                     render={({ field }) => (
                                                         <FormItem className="space-y-3">
-                                                            <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Email do Responsável (Para Notificações)</FormLabel>
+                                                            <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Email do Responsável <span className="text-red-500">*</span></FormLabel>
                                                             <FormControl>
                                                                 <Input placeholder="email@vaga.com.br" className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6" {...field} value={field.value ?? ''} />
                                                             </FormControl>
@@ -303,7 +302,7 @@ export default function AnunciarVagaPage() {
                                                     name="phone"
                                                     render={({ field }) => (
                                                         <FormItem className="space-y-3">
-                                                            <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">WhatsApp para Contato</FormLabel>
+                                                            <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">WhatsApp para Contato <span className="text-red-500">*</span></FormLabel>
                                                             <FormControl>
                                                                 <Input
                                                                     placeholder="(00) 00000-0000"
@@ -341,7 +340,7 @@ export default function AnunciarVagaPage() {
                                             name="description"
                                             render={({ field }) => (
                                                 <FormItem className="space-y-3">
-                                                    <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Descrição e Requisitos</FormLabel>
+                                                    <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Descrição e Requisitos <span className="text-red-500">*</span></FormLabel>
                                                     <FormControl>
                                                         <Textarea
                                                             placeholder={`### Formação\n- Ex: Técnico Agrícola ou Engenheiro Agrônomo\n\n### Perfil\n- Conhecimento da cultura de Soja e Milho\n- Experiência com GPS\n\n### Requisitos\n- Disponibilidade para viagens\n- CNH B`}

@@ -27,9 +27,9 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { sendJobNotification } from '@/app/actions/send-email'
 
 const formSchema = z.object({
-    name: z.string().min(3, 'Nome muito curto'),
-    email: z.string().email('Email inválido. Ex: seu@email.com').min(5, 'Email muito curto'),
-    phone: z.string().min(14, 'Telefone incompleto'),
+    name: z.string().min(3, 'Nome é obrigatório'),
+    email: z.string().email('Email inválido. Ex: seu@email.com').min(5, 'Email é obrigatório'),
+    phone: z.string().min(14, 'Telefone é obrigatório'),
     motivation: z.string().optional(),
     region: z.string().min(2, 'Região é obrigatória'),
     category: z.string().min(1, 'Área é obrigatória'),
@@ -254,7 +254,7 @@ export function JobApplicationForm({ jobId, jobTitle, ownerEmail }: { jobId: str
                                             name="name"
                                             render={({ field }) => (
                                                 <FormItem className="space-y-2">
-                                                    <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">Nome Completo</FormLabel>
+                                                    <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">Nome Completo <span className="text-red-500">*</span></FormLabel>
                                                     <FormControl>
                                                         <Input placeholder="Seu nome" className="h-12 bg-gray-50 border-none focus:bg-white focus:ring-primary focus:border-primary transition-all rounded-xl font-medium" {...field} value={field.value ?? ''} />
                                                     </FormControl>
@@ -269,7 +269,7 @@ export function JobApplicationForm({ jobId, jobTitle, ownerEmail }: { jobId: str
                                                 name="email"
                                                 render={({ field }) => (
                                                     <FormItem className="space-y-2">
-                                                        <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">Email Profissional</FormLabel>
+                                                        <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">Email Profissional <span className="text-red-500">*</span></FormLabel>
                                                         <FormControl>
                                                             <Input
                                                                 placeholder="seu@email.com"
@@ -293,7 +293,7 @@ export function JobApplicationForm({ jobId, jobTitle, ownerEmail }: { jobId: str
                                                 name="phone"
                                                 render={({ field }) => (
                                                     <FormItem className="space-y-2">
-                                                        <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">WhatsApp</FormLabel>
+                                                        <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-400">WhatsApp <span className="text-red-500">*</span></FormLabel>
                                                         <FormControl>
                                                             <Input
                                                                 placeholder="(00) 00000-0000"

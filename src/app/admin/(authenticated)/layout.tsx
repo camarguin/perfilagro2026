@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { Loader2 } from "lucide-react";
 
@@ -11,6 +11,7 @@ export default function AdminLayout({
 }: {
     children: React.ReactNode;
 }) {
+    const supabase = createClient();
     const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
 

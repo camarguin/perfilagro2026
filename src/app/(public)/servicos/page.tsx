@@ -100,7 +100,6 @@ export default function ServicesPage() {
                                 </p>
                             </CardContent>
                             <CardFooter className="flex flex-col items-start gap-4 mt-auto">
-                                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">CTA</p>
                                 <p className="text-sm italic text-foreground mb-2">Divulgue sua vaga para quem realmente é do agro.</p>
                                 <Link href="/anunciar-vaga" className="w-full">
                                     <Button variant="outline" className="w-full border-2 group-hover:border-primary group-hover:text-primary">
@@ -124,7 +123,6 @@ export default function ServicesPage() {
                                 </p>
                             </CardContent>
                             <CardFooter className="flex flex-col items-start gap-4 mt-auto">
-                                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">CTA</p>
                                 <p className="text-sm italic text-foreground mb-2">Ganhe tempo na sua contratação.</p>
                                 <Link href="/contato" className="w-full">
                                     <Button variant="outline" className="w-full border-2 group-hover:border-primary group-hover:text-primary">
@@ -148,7 +146,6 @@ export default function ServicesPage() {
                                 </p>
                             </CardContent>
                             <CardFooter className="flex flex-col items-start gap-4 mt-auto">
-                                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">CTA</p>
                                 <p className="text-sm italic text-foreground mb-2">Deixe a gestão de pessoas com especialistas.</p>
                                 <Link href="/contato" className="w-full">
                                     <Button variant="outline" className="w-full border-2 group-hover:border-primary group-hover:text-primary">
