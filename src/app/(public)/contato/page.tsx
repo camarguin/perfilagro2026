@@ -24,6 +24,7 @@ const formSchema = z.object({
     name: z.string().min(3, 'Nome muito curto'),
     email: z.string().email('Email inválido. Ex: seu@email.com').min(5, 'Email muito curto'),
     phone: z.string().min(14, 'Telefone incompleto'),
+    company: z.string().optional(),
     subject: z.string().min(5, 'Assunto muito curto'),
     message: z.string().min(10, 'Mensagem muito curta'),
 })
@@ -42,6 +43,7 @@ export default function ContatoPage() {
             name: '',
             email: '',
             phone: '',
+            company: '',
             subject: '',
             message: '',
         },
@@ -55,6 +57,7 @@ export default function ContatoPage() {
             formData.append('name', values.name)
             formData.append('email', values.email)
             formData.append('phone', values.phone)
+            formData.append('company', values.company || '')
             formData.append('subject', values.subject)
             formData.append('message', values.message)
 
@@ -233,6 +236,19 @@ export default function ContatoPage() {
                                                                 value={field.value ?? ''}
                                                                 onChange={(e) => field.onChange(maskPhone(e.target.value))}
                                                             />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="company"
+                                                render={({ field }) => (
+                                                    <FormItem className="space-y-3">
+                                                        <FormLabel className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Empresa (Opcional)</FormLabel>
+                                                        <FormControl>
+                                                            <Input placeholder="Nome da empresa" className="h-14 bg-gray-50 border-none focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all rounded-2xl font-medium px-6" {...field} />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>

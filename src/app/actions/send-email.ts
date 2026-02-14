@@ -6,6 +6,7 @@ export async function sendContactEmail(formData: FormData) {
     const name = formData.get('name') as string
     const email = formData.get('email') as string
     const phone = formData.get('phone') as string
+    const company = formData.get('company') as string
     const subject = formData.get('subject') as string
     const message = formData.get('message') as string
 
@@ -34,6 +35,7 @@ export async function sendContactEmail(formData: FormData) {
 Nome: ${name}
 Email: ${email}
 WhatsApp: ${phone}
+Empresa: ${company || 'Não informada'}
 Assunto: ${subject}
 
 Mensagem:
@@ -45,6 +47,7 @@ ${message}
     <p><strong>Nome:</strong> ${name}</p>
     <p><strong>Email:</strong> ${email}</p>
     <p><strong>WhatsApp:</strong> ${phone}</p>
+    <p><strong>Empresa:</strong> ${company || 'Não informada'}</p>
     <p><strong>Assunto:</strong> ${subject}</p>
     <br/>
     <p><strong>Mensagem:</strong></p>
