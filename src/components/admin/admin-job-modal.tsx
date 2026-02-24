@@ -34,6 +34,7 @@ import { Loader2, Upload, X, Image as ImageIcon } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
 import { maskPhone } from "@/lib/masks"
+import { compressImage } from "@/lib/image-optimization"
 
 const formSchema = z.object({
     title: z.string().min(2, 'Título deve ter pelo menos 2 caracteres'),
@@ -115,11 +116,14 @@ export function AdminJobModal({ isOpen, onClose, job, onSuccess }: AdminJobModal
             let imageUrl = job?.image_url || ''
 
             if (imageFile) {
-                const fileExt = imageFile.name.split('.').pop()
-                const fileName = `${Date.now()}.${fileExt}`
+                // Compress image to WebP
+                const compressedFile = await compressImage(imageFile, 0.8)
+
+                // Use .webp extension for filename
+                const fileName = `${Date.now()}.webp`
                 const { error: uploadError } = await supabase.storage
                     .from('job-images')
-                    .upload(fileName, imageFile)
+                    .upload(fileName, compressedFile)
 
                 if (uploadError) throw uploadError
 

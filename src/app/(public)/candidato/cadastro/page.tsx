@@ -20,12 +20,23 @@ import {
     FormMessage,
     FormDescription
 } from "@/components/ui/form"
-import { Upload, User, Mail, Phone, MapPin, Briefcase, FileText, CheckCircle2, Loader2 } from "lucide-react"
+import { Upload, User, Mail, Phone, MapPin, Briefcase, FileText, CheckCircle2, Loader2, AlertCircle } from "lucide-react"
 import { supabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from "framer-motion"
 import Link from 'next/link'
 import { TagInput } from "@/components/ui/tag-input"
 import { maskPhone } from "@/lib/masks"
+import { toast } from "sonner"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 // Predefined skills from old website
 const SKILLS_SUGGESTIONS = [
@@ -57,14 +68,14 @@ const formSchema = z.object({
     privacyPolicy: z.boolean().refine(val => val === true, { message: 'Você precisa aceitar a política de privacidade' }),
 })
 
-import { toast } from "sonner"
-
 export default function CadastroCandidatoPage() {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [success, setSuccess] = useState(false)
     const [resumeFile, setResumeFile] = useState<File | null>(null)
 
     const [existingResumeUrl, setExistingResumeUrl] = useState<string | null>(null)
+    const [showOverwriteModal, setShowOverwriteModal] = useState(false)
+    const [pendingFormValues, setPendingFormValues] = useState<z.infer<typeof formSchema> | null>(null)
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -118,19 +129,64 @@ export default function CadastroCandidatoPage() {
     }
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        if (!resumeFile && !existingResumeUrl) {
-            toast.error("Por favor, anexe seu currículo em PDF.")
+        if (resumeFile && existingResumeUrl) {
+            setPendingFormValues(values)
+            setShowOverwriteModal(true)
             return
         }
 
-        // Validate PDF if a new file is provided
-        if (resumeFile && !resumeFile.type.includes('pdf')) {
-            toast.error('Somente arquivos PDF são permitidos.')
-            return
-        }
+        await processSubmission(values)
+    }
 
+    async function processSubmission(values: z.infer<typeof formSchema>) {
         setIsSubmitting(true)
+        setShowOverwriteModal(false)
+
         try {
+            let resumePath = existingResumeUrl
+
+            // If no file was selected and no existing resume was set (maybe onBlur was bypassed)
+            if (!resumeFile && !resumePath) {
+                const { data: dbCheck } = await supabase
+                    .from('candidates')
+                    .select('resume_url')
+                    .eq('email', values.email)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+
+                if (dbCheck && dbCheck[0] && dbCheck[0].resume_url) {
+                    resumePath = dbCheck[0].resume_url
+                }
+            }
+
+            // Still nothing? Require a file
+            if (!resumeFile && !resumePath) {
+                toast.error('Por favor, anexe seu currículo em PDF.')
+                setIsSubmitting(false)
+                return
+            }
+
+            // Validate PDF if a new file is provided
+            if (resumeFile && !resumeFile.type.includes('pdf')) {
+                toast.error('Somente arquivos PDF são permitidos.')
+                setIsSubmitting(false)
+                return
+            }
+
+            // Check for existing candidate again before insert in Banco Geral
+            const { data: existing } = await supabase
+                .from('candidates')
+                .select('id')
+                .eq('email', values.email)
+                .is('job_id', null)
+                .limit(1)
+
+            if (existing && existing.length > 0) {
+                toast.error("Este email já está cadastrado no Banco de Talentos.")
+                setIsSubmitting(false)
+                return
+            }
+
             // Save to localStorage
             localStorage.setItem('perfilagro_user_data', JSON.stringify({
                 name: values.name,
@@ -141,30 +197,20 @@ export default function CadastroCandidatoPage() {
                 seniority: values.seniority
             }))
 
-            let resumePath = existingResumeUrl
-
             if (resumeFile) {
                 const fileExt = resumeFile.name.split('.').pop()
-                const fileName = `direct/${Date.now()}.${fileExt}`
+                const safeEmail = btoa(values.email).replace(/[^a-zA-Z0-9]/g, '')
+                const fileName = `users/${safeEmail}.${fileExt}`
 
                 const { error: uploadError } = await supabase.storage
                     .from('resumes')
-                    .upload(fileName, resumeFile)
+                    .upload(fileName, resumeFile, {
+                        upsert: true,
+                        cacheControl: '3600'
+                    })
 
                 if (uploadError) throw uploadError
                 resumePath = fileName
-            }
-
-            // Check for existing candidate again before insert
-            const { data: existing } = await supabase
-                .from('candidates')
-                .select('id')
-                .eq('email', values.email)
-                .maybeSingle()
-
-            if (existing) {
-                toast.error("Este email já está cadastrado em nosso banco.")
-                return
             }
 
             // Insert Candidate
@@ -188,6 +234,7 @@ export default function CadastroCandidatoPage() {
             toast.success("Cadastro realizado com sucesso!")
             form.reset()
             setResumeFile(null)
+            setPendingFormValues(null)
         } catch (error) {
             console.error('Error submitting candidate:', error)
             toast.error("Erro ao realizar cadastro. Tente novamente.")
@@ -463,23 +510,46 @@ export default function CadastroCandidatoPage() {
                                             <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">Currículo</h3>
                                         </div>
 
-                                        <div className="p-8 border-2 border-dashed border-gray-100 rounded-3xl bg-gray-50/30 hover:bg-primary/5 hover:border-primary/30 transition-all text-center group relative overflow-hidden">
-                                            <div className="relative z-10 flex flex-col items-center">
-                                                <div className="h-16 w-16 rounded-2xl bg-white shadow-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-500">
-                                                    <Upload className="h-8 w-8 text-primary" />
+                                        {existingResumeUrl && !resumeFile ? (
+                                            <div className="flex flex-col gap-2">
+                                                <div className="flex items-center justify-between p-6 border-2 border-green-100 bg-green-50/50 rounded-3xl transition-all">
+                                                    <div className="flex items-center gap-3 text-green-700">
+                                                        <CheckCircle2 className="h-6 w-6" />
+                                                        <span className="text-sm font-bold">Currículo no banco de talentos</span>
+                                                    </div>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-9 text-xs text-green-700 hover:bg-green-100 font-bold px-4 rounded-xl"
+                                                        onClick={() => {
+                                                            setExistingResumeUrl(null);
+                                                            toast.success("Envie seu novo currículo abaixo.");
+                                                        }}
+                                                    >
+                                                        Enviar Novo
+                                                    </Button>
                                                 </div>
-                                                <p className="font-bold text-gray-900 mb-1">
-                                                    {resumeFile ? resumeFile.name : 'Anexar Currículo'}
-                                                </p>
-                                                <p className="text-xs text-gray-400 font-medium">Somente arquivo PDF (Max 5MB)</p>
-                                                <Input
-                                                    type="file"
-                                                    className="absolute inset-0 opacity-0 cursor-pointer"
-                                                    accept=".pdf"
-                                                    onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
-                                                />
                                             </div>
-                                        </div>
+                                        ) : (
+                                            <div className="p-8 border-2 border-dashed border-gray-100 rounded-3xl bg-gray-50/30 hover:bg-primary/5 hover:border-primary/30 transition-all text-center group relative overflow-hidden">
+                                                <div className="relative z-10 flex flex-col items-center">
+                                                    <div className="h-16 w-16 rounded-2xl bg-white shadow-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-500">
+                                                        <Upload className="h-8 w-8 text-primary" />
+                                                    </div>
+                                                    <p className="font-bold text-gray-900 mb-1">
+                                                        {resumeFile ? resumeFile.name : 'Anexar Currículo'}
+                                                    </p>
+                                                    <p className="text-xs text-gray-400 font-medium">Somente arquivo PDF (Max 5MB)</p>
+                                                    <Input
+                                                        type="file"
+                                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                                        accept=".pdf"
+                                                        onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
 
                                         <FormField
                                             control={form.control}
@@ -526,6 +596,47 @@ export default function CadastroCandidatoPage() {
                     </Card>
                 </motion.div>
             </div>
+
+            <AlertDialog open={showOverwriteModal} onOpenChange={setShowOverwriteModal}>
+                <AlertDialogContent className="rounded-[2rem] border-none shadow-[0_32px_64px_-12px_rgba(0,0,0,0.2)]">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-2xl font-black text-gray-900 mb-2">Substituir Arquivo?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-base text-gray-500 font-medium leading-relaxed">
+                            Notamos que você enviou um novo arquivo PDF. Deseja substituir o currículo antigo salvo em nosso sistema pelo novo arquivo?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="bg-orange-50/50 p-4 rounded-xl border border-orange-100 flex items-start gap-3 mt-4 mb-2">
+                        <div className="bg-orange-100 p-2 rounded-lg shrink-0 mt-0.5">
+                            <AlertCircle className="h-4 w-4 text-orange-600" />
+                        </div>
+                        <p className="text-sm font-medium text-orange-800 leading-snug">
+                            Esse novo arquivo ficará disponível no banco de talentos e em todas as vagas que você se candidatar de agora em diante.
+                        </p>
+                    </div>
+                    <AlertDialogFooter className="mt-6">
+                        <AlertDialogCancel
+                            className="bg-gray-50 border-none font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100 h-12 rounded-xl"
+                            onClick={() => {
+                                setShowOverwriteModal(false)
+                                setPendingFormValues(null)
+                                setResumeFile(null)
+                            }}
+                        >
+                            Cancelar
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-xl shadow-lg shadow-primary/20"
+                            onClick={() => {
+                                if (pendingFormValues) {
+                                    processSubmission(pendingFormValues)
+                                }
+                            }}
+                        >
+                            Sim, substituir
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

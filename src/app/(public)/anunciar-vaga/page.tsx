@@ -32,6 +32,7 @@ import { Loader2, Upload, Briefcase, MapPin, Calendar, CheckCircle2, Image as Im
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
+import { compressImage } from "@/lib/image-optimization"
 
 const formSchema = z.object({
     title: z.string().min(2, 'Título é obrigatório'),
@@ -68,17 +69,21 @@ export default function AnunciarVagaPage() {
         }
     }
 
+
+
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsSubmitting(true)
         try {
             let imageUrl = ''
 
             if (imageFile) {
-                const fileExt = imageFile.name.split('.').pop()
-                const fileName = `${Date.now()}.${fileExt}`
+                // Compress image to WebP
+                const compressedFile = await compressImage(imageFile, 0.8)
+
+                const fileName = `${Date.now()}.webp`
                 const { error: uploadError } = await supabase.storage
                     .from('job-images')
-                    .upload(fileName, imageFile)
+                    .upload(fileName, compressedFile)
 
                 if (uploadError) throw uploadError
 
